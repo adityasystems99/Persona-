@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import confetti from 'canvas-confetti';
+import { User } from '@supabase/supabase-js';
 import {
   Problem,
   ProblemStatus,
@@ -45,6 +46,17 @@ import {
   getTodayDateString,
 } from '../data/initialData';
 import { INITIAL_STL_TOPICS } from '../data/stlTopics';
+import {
+  supabase,
+  isSupabaseConfigured,
+  fetchAllUserDataFromCloud,
+  syncProblemToCloud,
+  deleteProblemFromCloud,
+  syncDailyPlanToCloud,
+  syncSTLSessionToCloud,
+  syncSettingsToCloud,
+  syncStudyLogToCloud,
+} from '../lib/supabase';
 
 interface DSAContextType {
   problems: Problem[];
@@ -56,6 +68,12 @@ interface DSAContextType {
   notifications: AppNotification[];
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
+
+  // Supabase Auth & Cloud Sync
+  currentUser: User | null;
+  authModalOpen: boolean;
+  setAuthModalOpen: (open: boolean) => void;
+  syncLocalDataToCloud: () => Promise<void>;
 
   // Problem actions
   addProblem: (data: Partial<Problem>) => Problem;
@@ -146,9 +164,76 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [notifications, setNotifications] = useState<AppNotification[]>(loadStoredNotifications);
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
 
+  // Supabase Auth State
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+
   const todayStr = getTodayDateString();
 
-  // Keep localStorage updated
+  // Listen for Supabase Auth state changes & sync initial data
+  useEffect(() => {
+    if (!supabase) return;
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setCurrentUser(session?.user ?? null);
+      if (session?.user) {
+        loadCloudData(session.user.id);
+      }
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const user = session?.user ?? null;
+      setCurrentUser(user);
+      if (user) {
+        loadCloudData(user.id);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const loadCloudData = async (userId: string) => {
+    const cloudData = await fetchAllUserDataFromCloud(userId);
+    if (!cloudData) return;
+
+    if (cloudData.problems && cloudData.problems.length > 0) {
+      setProblems(cloudData.problems);
+    }
+    if (cloudData.dailyPlans && cloudData.dailyPlans.length > 0) {
+      const todayPlan = cloudData.dailyPlans.find((p) => p.date === todayStr);
+      if (todayPlan) setDailyPlan(todayPlan);
+    }
+    if (cloudData.stlSessions && cloudData.stlSessions.length > 0) {
+      const todaySTL = cloudData.stlSessions.find((s) => s.date === todayStr);
+      if (todaySTL) setStlState(todaySTL);
+    }
+    if (cloudData.settings) {
+      setSettings(cloudData.settings);
+    }
+    if (cloudData.studyLogs && cloudData.studyLogs.length > 0) {
+      setStudyLogs(cloudData.studyLogs);
+    }
+  };
+
+  const syncLocalDataToCloud = async () => {
+    if (!currentUser) return;
+    const userId = currentUser.id;
+
+    // Upload all problems
+    for (const p of problems) {
+      await syncProblemToCloud(p, userId);
+    }
+    await syncDailyPlanToCloud(dailyPlan, userId);
+    await syncSTLSessionToCloud(stlState, userId);
+    await syncSettingsToCloud(settings, userId);
+    for (const l of studyLogs) {
+      await syncStudyLogToCloud(l, userId);
+    }
+  };
+
+  // Local storage synchronization
   useEffect(() => {
     saveStoredProblems(problems);
   }, [problems]);
@@ -219,7 +304,6 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         const nextRemaining = curr.remainingSeconds - 1;
         if (nextRemaining <= 0) {
-          // Timer reached zero!
           clearInterval(interval);
           if (settings.soundEnabled) {
             soundFx.playFanfare();
@@ -239,13 +323,13 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             'stl'
           );
 
-          // Mark daily plan STL as completed
-          setDailyPlan((p) => ({ ...p, stlCompleted: true }));
+          const updatedPlan = { ...dailyPlan, stlCompleted: true };
+          setDailyPlan(updatedPlan);
+          if (currentUser) syncDailyPlanToCloud(updatedPlan, currentUser.id);
 
-          // Update study log for today
           updateTodayStudyLog({ stlMinutes: 30, stlCompleted: true });
 
-          return {
+          const completedState = {
             ...curr,
             remainingSeconds: 0,
             isRunning: false,
@@ -253,6 +337,9 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             completedAt: new Date().toISOString(),
             lastTickTimestamp: Date.now(),
           };
+          if (currentUser) syncSTLSessionToCloud(completedState, currentUser.id);
+
+          return completedState;
         }
 
         return {
@@ -264,7 +351,7 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [stlState.isRunning, settings.soundEnabled, addNotification]);
+  }, [stlState.isRunning, settings.soundEnabled, addNotification, currentUser, dailyPlan]);
 
   // Hourly Accountability & Reminder Runner
   useEffect(() => {
@@ -277,21 +364,18 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       if (nowMs - lastCheck < intervalMs) return;
 
-      // Verify study window
       if (!isWithinStudyWindow(settings.studyStartTime, settings.studyEndTime)) {
         return;
       }
 
       setLastHourlyReminderTimestamp(nowMs);
 
-      // 1. Check unsolved target
       const todayProblems = problems.filter((p) => p.inTodayPlan);
       const solvedToday = todayProblems.filter(
         (p) => p.status === 'Solved Independently' || p.status === 'Solved with Hints'
       );
       const pendingCount = todayProblems.length - solvedToday.length;
 
-      // 2. Check STL status
       if (settings.stlReminderEnabled && !stlStateRef.current.isCompleted) {
         addNotification(
           'STL Practice Pending',
@@ -313,7 +397,6 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     };
 
-    // Check on initial load and every 60 seconds
     checkReminders();
     const reminderInterval = setInterval(checkReminders, 60000);
     return () => clearInterval(reminderInterval);
@@ -323,12 +406,16 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const updateTodayStudyLog = (diff: Partial<StudyDayLog>) => {
     setStudyLogs((prev) => {
       const todayIndex = prev.findIndex((l) => l.date === todayStr);
+      let updatedLog: StudyDayLog;
+
       if (todayIndex >= 0) {
         const updated = [...prev];
-        updated[todayIndex] = { ...updated[todayIndex], ...diff };
+        updatedLog = { ...updated[todayIndex], ...diff };
+        updated[todayIndex] = updatedLog;
+        if (currentUser) syncStudyLogToCloud(updatedLog, currentUser.id);
         return updated;
       } else {
-        const newLog: StudyDayLog = {
+        updatedLog = {
           date: todayStr,
           solvedCount: 0,
           easySolved: 0,
@@ -342,7 +429,8 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           targetMet: false,
           ...diff,
         };
-        return [newLog, ...prev];
+        if (currentUser) syncStudyLogToCloud(updatedLog, currentUser.id);
+        return [updatedLog, ...prev];
       }
     });
   };
@@ -378,6 +466,7 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setProblems((prev) => [newProblem, ...prev]);
+    if (currentUser) syncProblemToCloud(newProblem, currentUser.id);
     addNotification('Problem Added', `"${newProblem.title}" added to question bank.`, 'info');
     return newProblem;
   };
@@ -386,17 +475,20 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setProblems((prev) =>
       prev.map((p) => {
         if (p.id !== id) return p;
-        return {
+        const updated = {
           ...p,
           ...updates,
           updatedAt: new Date().toISOString(),
         };
+        if (currentUser) syncProblemToCloud(updated, currentUser.id);
+        return updated;
       })
     );
   };
 
   const deleteProblem = (id: string) => {
     setProblems((prev) => prev.filter((p) => p.id !== id));
+    if (currentUser) deleteProblemFromCloud(id, currentUser.id);
     addNotification('Problem Removed', 'Problem removed from database.', 'info');
   };
 
@@ -433,6 +525,7 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           updatedAt: new Date().toISOString(),
         };
 
+        if (currentUser) syncProblemToCloud(updated, currentUser.id);
         return updated;
       })
     );
@@ -454,12 +547,14 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       prev.map((p) => {
         if (p.id !== id) return p;
         const nextInPlan = !p.inTodayPlan;
-        return {
+        const updated = {
           ...p,
           inTodayPlan: nextInPlan,
           orderInPlan: nextInPlan ? 999 : 0,
           updatedAt: new Date().toISOString(),
         };
+        if (currentUser) syncProblemToCloud(updated, currentUser.id);
+        return updated;
       })
     );
   };
@@ -482,6 +577,11 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const currentOrder = currentItem.orderInPlan;
       currentItem.orderInPlan = targetItem.orderInPlan;
       targetItem.orderInPlan = currentOrder;
+
+      if (currentUser) {
+        syncProblemToCloud(currentItem, currentUser.id);
+        syncProblemToCloud(targetItem, currentUser.id);
+      }
 
       return [...prev];
     });
@@ -517,55 +617,82 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
 
     setProblems((prev) => [...newItems, ...prev]);
+    if (currentUser) {
+      newItems.forEach((p) => syncProblemToCloud(p, currentUser.id));
+    }
     addNotification('Bulk Import Successful', `Added ${newItems.length} problems to your library.`, 'info');
     return newItems.length;
   };
 
   const updateDailyPlan = (updates: Partial<DailyPlan>) => {
-    setDailyPlan((prev) => ({ ...prev, ...updates }));
+    setDailyPlan((prev) => {
+      const updated = { ...prev, ...updates };
+      if (currentUser) syncDailyPlanToCloud(updated, currentUser.id);
+      return updated;
+    });
   };
 
   // STL Timer actions
   const startSTLTimer = () => {
     if (stlState.remainingSeconds <= 0) return;
     if (settings.soundEnabled) soundFx.playTick();
-    setStlState((prev) => ({
-      ...prev,
-      isRunning: true,
-      lastTickTimestamp: Date.now(),
-    }));
+    setStlState((prev) => {
+      const updated = {
+        ...prev,
+        isRunning: true,
+        lastTickTimestamp: Date.now(),
+      };
+      if (currentUser) syncSTLSessionToCloud(updated, currentUser.id);
+      return updated;
+    });
   };
 
   const pauseSTLTimer = () => {
     if (settings.soundEnabled) soundFx.playTick();
-    setStlState((prev) => ({
-      ...prev,
-      isRunning: false,
-      lastTickTimestamp: Date.now(),
-    }));
+    setStlState((prev) => {
+      const updated = {
+        ...prev,
+        isRunning: false,
+        lastTickTimestamp: Date.now(),
+      };
+      if (currentUser) syncSTLSessionToCloud(updated, currentUser.id);
+      return updated;
+    });
   };
 
   const resetSTLTimer = () => {
     if (settings.soundEnabled) soundFx.playTick();
-    setStlState((prev) => ({
-      ...prev,
-      isRunning: false,
-      remainingSeconds: prev.totalSeconds,
-      isCompleted: false,
-      lastTickTimestamp: Date.now(),
-    }));
+    setStlState((prev) => {
+      const updated = {
+        ...prev,
+        isRunning: false,
+        remainingSeconds: prev.totalSeconds,
+        isCompleted: false,
+        lastTickTimestamp: Date.now(),
+      };
+      if (currentUser) syncSTLSessionToCloud(updated, currentUser.id);
+      return updated;
+    });
   };
 
   const extendSTLTimer = (seconds: number) => {
-    setStlState((prev) => ({
-      ...prev,
-      remainingSeconds: prev.remainingSeconds + seconds,
-      totalSeconds: Math.max(prev.totalSeconds, prev.remainingSeconds + seconds),
-    }));
+    setStlState((prev) => {
+      const updated = {
+        ...prev,
+        remainingSeconds: prev.remainingSeconds + seconds,
+        totalSeconds: Math.max(prev.totalSeconds, prev.remainingSeconds + seconds),
+      };
+      if (currentUser) syncSTLSessionToCloud(updated, currentUser.id);
+      return updated;
+    });
   };
 
   const updateSTLState = (updates: Partial<STLPracticeState>) => {
-    setStlState((prev) => ({ ...prev, ...updates }));
+    setStlState((prev) => {
+      const updated = { ...prev, ...updates };
+      if (currentUser) syncSTLSessionToCloud(updated, currentUser.id);
+      return updated;
+    });
   };
 
   const toggleSTLTopicComplete = (topicId: string) => {
@@ -587,14 +714,23 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       confetti({ particleCount: 80, spread: 60 });
     } catch {}
 
-    setStlState((prev) => ({
-      ...prev,
+    const completedState = {
+      ...stlState,
       isRunning: false,
       remainingSeconds: 0,
       isCompleted: true,
       completedAt: new Date().toISOString(),
-    }));
-    setDailyPlan((prev) => ({ ...prev, stlCompleted: true }));
+    };
+    setStlState(completedState);
+
+    const updatedPlan = { ...dailyPlan, stlCompleted: true };
+    setDailyPlan(updatedPlan);
+
+    if (currentUser) {
+      syncSTLSessionToCloud(completedState, currentUser.id);
+      syncDailyPlanToCloud(updatedPlan, currentUser.id);
+    }
+
     updateTodayStudyLog({ stlMinutes: 30, stlCompleted: true });
     addNotification('STL Session Marked Complete', 'Logged 30-min STL practice for today.', 'stl');
   };
@@ -609,7 +745,7 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setProblems((prev) =>
       prev.map((p) => {
         if (p.id !== problemId) return p;
-        return {
+        const updated = {
           ...p,
           needsRevision: true,
           revisionScheduledDate: scheduledDate,
@@ -617,6 +753,8 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           patternLearned: patternLearned !== undefined ? patternLearned : p.patternLearned,
           updatedAt: new Date().toISOString(),
         };
+        if (currentUser) syncProblemToCloud(updated, currentUser.id);
+        return updated;
       })
     );
     addNotification('Revision Scheduled', `Problem queued for revision on ${scheduledDate}.`, 'info');
@@ -632,14 +770,16 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           success,
           notes,
         };
-        return {
+        const updated = {
           ...p,
           revisionHistory: [newLog, ...p.revisionHistory],
-          needsRevision: !success, // resolve if successfully solved!
-          status: success ? 'Solved Independently' : p.status,
+          needsRevision: !success,
+          status: (success ? 'Solved Independently' : p.status) as ProblemStatus,
           solvedIndependently: success ? true : p.solvedIndependently,
           updatedAt: new Date().toISOString(),
         };
+        if (currentUser) syncProblemToCloud(updated, currentUser.id);
+        return updated;
       })
     );
 
@@ -659,11 +799,13 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setProblems((prev) =>
       prev.map((p) => {
         if (p.id !== problemId) return p;
-        return {
+        const updated = {
           ...p,
           needsRevision: false,
           updatedAt: new Date().toISOString(),
         };
+        if (currentUser) syncProblemToCloud(updated, currentUser.id);
+        return updated;
       })
     );
     addNotification('Removed from Revision Queue', 'Problem marked resolved.', 'info');
@@ -671,7 +813,11 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Settings & notifications
   const updateSettings = (updates: Partial<AccountabilitySettings>) => {
-    setSettings((prev) => ({ ...prev, ...updates }));
+    setSettings((prev) => {
+      const updated = { ...prev, ...updates };
+      if (currentUser) syncSettingsToCloud(updated, currentUser.id);
+      return updated;
+    });
     addNotification('Settings Updated', 'Your preferences have been saved.', 'info');
   };
 
@@ -803,6 +949,10 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         notifications,
         activeTab,
         setActiveTab,
+        currentUser,
+        authModalOpen,
+        setAuthModalOpen,
+        syncLocalDataToCloud,
         addProblem,
         updateProblem,
         deleteProblem,

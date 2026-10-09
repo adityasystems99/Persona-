@@ -13,7 +13,9 @@ import {
   FileSpreadsheet,
   FileCode,
   Info,
-  CheckCircle2,
+  Cloud,
+  UserCheck,
+  Database,
 } from 'lucide-react';
 import { useDSA } from '../../context/DSAContext';
 import {
@@ -25,6 +27,7 @@ import {
   exportProblemsToCSV,
   parseImportedJSON,
 } from '../../utils/exportImport';
+import { isSupabaseConfigured } from '../../lib/supabase';
 
 export const SettingsView: React.FC = () => {
   const {
@@ -39,6 +42,8 @@ export const SettingsView: React.FC = () => {
     clearAllData,
     importAllData,
     addNotification,
+    currentUser,
+    setAuthModalOpen,
   } = useDSA();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -104,8 +109,47 @@ export const SettingsView: React.FC = () => {
           </h2>
         </div>
         <p className="text-xs text-slate-500 mt-0.5">
-          Fine-tune study windows, hourly check-in frequency, audio chimes, and backup data.
+          Fine-tune study windows, hourly check-in frequency, cloud sync, audio chimes, and backup data.
         </p>
+      </div>
+
+      {/* Cloud Sync & Persistence Section */}
+      <div className="card-soft p-6 space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="flex items-center space-x-2.5">
+            <Cloud size={18} className="text-purple-600" />
+            <h3 className="font-bold text-sm text-slate-800">
+              Supabase Cloud Sync & Multi-Device Persistence
+            </h3>
+          </div>
+          <button
+            onClick={() => setAuthModalOpen(true)}
+            className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 transition-all flex items-center space-x-1.5"
+          >
+            {currentUser ? <UserCheck size={14} /> : <Database size={14} />}
+            <span>{currentUser ? 'Manage Cloud Account' : 'Setup Cloud Sync'}</span>
+          </button>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <span className="text-xs font-bold text-slate-800 block">
+              Persistence Mode: {currentUser ? '🟢 Supabase Cloud Active' : isSupabaseConfigured ? '🟡 Supabase Configured (Not Signed In)' : '⚪ Local Storage Mode'}
+            </span>
+            <span className="text-[11px] text-slate-500 mt-0.5 block leading-relaxed">
+              {currentUser
+                ? `Logged in as ${currentUser.email}. All DSA problems, STL sessions, and plans automatically sync across your devices with Row Level Security.`
+                : 'Data is saved in this browser. Configure Supabase in Vercel to sync across all your devices.'}
+            </span>
+          </div>
+
+          <button
+            onClick={() => setAuthModalOpen(true)}
+            className="px-4 py-2 rounded-xl text-xs font-bold text-white gradient-coral shadow-glow-coral flex-shrink-0"
+          >
+            {currentUser ? 'Account & Sync' : 'Sign In / Connect'}
+          </button>
+        </div>
       </div>
 
       {/* 1. Study Window & Hourly Reminders */}
@@ -306,7 +350,7 @@ export const SettingsView: React.FC = () => {
         </div>
 
         <p className="text-xs text-slate-500">
-          Your preparation data is stored locally in your browser storage. Export regular backups to prevent accidental data loss.
+          Your preparation data is stored securely in your database or local browser storage. Export regular backups to prevent accidental data loss.
         </p>
 
         <div className="flex flex-wrap items-center gap-3">

@@ -103,5 +103,43 @@ npm run preview
 
 ---
 
+## 🚀 Vercel Production Deployment & Supabase Setup
+
+### Step 1: Push Code to GitHub
+Ensure the latest code is pushed to your GitHub repository:
+```bash
+git add .
+git commit -m "Add Supabase cloud sync, RLS, and Vercel production deployment config"
+git push origin main
+```
+
+### Step 2: (Optional but Recommended) Supabase Cloud Database Setup
+To sync your DSA questions and progress across your phone, tablet, and multiple computers:
+
+1. Create a free account at [supabase.com](https://supabase.com) and click **New Project**.
+2. Go to **SQL Editor** -> **New Query**.
+3. Copy the entire contents of [`supabase/schema.sql`](supabase/schema.sql) and click **Run**.
+   - This creates all tables with **Row Level Security (RLS)** policies so only your authenticated account can access your data.
+4. Go to **Project Settings** -> **API** and copy:
+   - **Project URL** (e.g., `https://xyzcompany.supabase.co`)
+   - **anon / public key** (e.g., `eyJhbGciOi...`)
+
+### Step 3: Deploy to Vercel
+1. Go to [vercel.com](https://vercel.com) and sign in with GitHub.
+2. Click **Add New Project** -> **Import Git Repository**.
+3. Select your repository: `adityasystems99/Persona-`.
+4. Vercel automatically detects:
+   - Framework: **Vite**
+   - Build Command: `tsc -b && vite build`
+   - Output Directory: `dist`
+5. In **Environment Variables**, add:
+   - `VITE_SUPABASE_URL` = your Supabase Project URL
+   - `VITE_SUPABASE_ANON_KEY` = your Supabase Anon public key
+   *(Note: If you leave these blank, AlgoPulse runs seamlessly in offline LocalStorage mode!)*
+6. Click **Deploy**. In under a minute, your production URL will be live!
+
+---
+
 ## 🔒 Known Limitations & Transparency
 - **Browser Background Execution**: In compliance with standard web browser sandbox policies, background reminders and timers execute while the tab or browser window is open. Background notifications cannot trigger when the entire browser is completely terminated without an operating system native daemon. Keep the tab open or pinned during study hours for alerts.
+

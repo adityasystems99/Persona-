@@ -13,10 +13,11 @@ import { AddEditProblemModal } from './components/modals/AddEditProblemModal';
 import { BulkAddModal } from './components/modals/BulkAddModal';
 import { RevisionLogModal } from './components/modals/RevisionLogModal';
 import { EndOfDaySummaryModal } from './components/dashboard/EndOfDaySummaryModal';
+import { AuthModal } from './components/modals/AuthModal';
 import { Problem } from './types/dsa';
 
 const MainApp: React.FC = () => {
-  const { activeTab } = useDSA();
+  const { activeTab, authModalOpen, setAuthModalOpen } = useDSA();
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -143,6 +144,11 @@ const MainApp: React.FC = () => {
       <EndOfDaySummaryModal
         isOpen={summaryModalOpen}
         onClose={() => setSummaryModalOpen(false)}
+      />
+
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
       />
     </div>
   );

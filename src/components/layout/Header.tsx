@@ -6,6 +6,8 @@ import {
   CheckCircle2,
   Calendar,
   Sparkles,
+  Cloud,
+  HardDrive,
 } from 'lucide-react';
 import { useDSA } from '../../context/DSAContext';
 import { NotificationDropdown } from '../common/NotificationToast';
@@ -21,7 +23,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAddModal,
   onOpenSummaryModal,
 }) => {
-  const { dailyPlan, stats, notifications } = useDSA();
+  const { dailyPlan, notifications, currentUser, setAuthModalOpen } = useDSA();
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -79,6 +81,29 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right Actions */}
         <div className="flex items-center space-x-2 sm:space-x-3">
+          {/* Cloud Sync Status Badge Button */}
+          <button
+            onClick={() => setAuthModalOpen(true)}
+            className={`hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border shadow-sm ${
+              currentUser
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80 hover:bg-emerald-100'
+                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+            }`}
+            title={currentUser ? `Cloud Synced (${currentUser.email})` : 'Cloud Sync (Local Storage Mode)'}
+          >
+            {currentUser ? (
+              <>
+                <Cloud size={14} className="text-emerald-500" />
+                <span>Cloud Sync</span>
+              </>
+            ) : (
+              <>
+                <HardDrive size={13} className="text-slate-400" />
+                <span>Local Mode</span>
+              </>
+            )}
+          </button>
+
           {/* Quick End-of-Session Summary */}
           <button
             onClick={onOpenSummaryModal}
