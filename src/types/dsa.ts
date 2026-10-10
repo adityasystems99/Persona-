@@ -306,6 +306,47 @@ export interface ReadinessBreakdown {
   actionableGaps: string[];
 }
 
+export type PlaylistCategory = 
+  | 'dsa'
+  | 'system-design'
+  | 'dbms'
+  | 'cn-os';
+
+export interface TimestampBookmark {
+  id: string;
+  timestampSeconds: number;
+  label: string;
+  note?: string;
+  createdAt: string;
+}
+
+export interface PlaylistItem {
+  id: string;
+  playlistId: string;
+  title: string;
+  videoUrl: string;
+  topic?: string;
+  order: number;
+  durationSeconds: number;
+  watchedSeconds: number;
+  isCompleted: boolean;
+  notes?: string;
+  bookmarks: TimestampBookmark[];
+  lastWatchedAt?: string;
+}
+
+export interface Playlist {
+  id: string;
+  category: PlaylistCategory;
+  title: string;
+  description?: string;
+  topic?: string;
+  order: number;
+  items: PlaylistItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type ActiveTab = 
   | 'dashboard'
   | 'daily-plan'
@@ -316,6 +357,7 @@ export type ActiveTab =
   | 'focus-mode'
   | 'weekly-autopsy'
   | 'milestones'
+  | 'playlists'
   | 'analytics'
   | 'settings';
 

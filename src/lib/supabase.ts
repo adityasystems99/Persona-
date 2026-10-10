@@ -1,5 +1,13 @@
 import { createClient, SupabaseClient, User, Session } from '@supabase/supabase-js';
-import { Problem, DailyPlan, STLPracticeState, AccountabilitySettings, StudyDayLog } from '../types/dsa';
+import {
+  Problem,
+  DailyPlan,
+  STLPracticeState,
+  AccountabilitySettings,
+  StudyDayLog,
+  Playlist,
+  PlaylistItem,
+} from '../types/dsa';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
@@ -413,4 +421,77 @@ export const syncRescheduleEventToCloud = async (event: any, userId: string) => 
     console.error('Failed to sync reschedule event to Supabase', err);
   }
 };
+
+// ==============================================================================
+// Playlists & Video Timestamps Cloud Sync
+// ==============================================================================
+
+export const syncPlaylistToCloud = async (playlist: Playlist, userId: string) => {
+  if (!supabase) return;
+  try {
+    await supabase.from('study_playlists').upsert({
+      id: playlist.id,
+      user_id: userId,
+      category: playlist.category,
+      title: playlist.title,
+      description: playlist.description || null,
+      topic: playlist.topic || null,
+      order_index: playlist.order,
+      created_at: playlist.createdAt,
+      updated_at: new Date().toISOString(),
+    });
+
+    // Also sync all items inside this playlist
+    if (playlist.items && playlist.items.length > 0) {
+      for (const item of playlist.items) {
+        await syncPlaylistItemToCloud(item, userId);
+      }
+    }
+  } catch (err) {
+    console.error('Failed to sync playlist to Supabase', err);
+  }
+};
+
+export const syncPlaylistItemToCloud = async (item: PlaylistItem, userId: string) => {
+  if (!supabase) return;
+  try {
+    await supabase.from('playlist_items').upsert({
+      id: item.id,
+      user_id: userId,
+      playlist_id: item.playlistId,
+      title: item.title,
+      video_url: item.videoUrl,
+      topic: item.topic || null,
+      order_index: item.order,
+      duration_seconds: item.durationSeconds,
+      watched_seconds: item.watchedSeconds,
+      is_completed: item.isCompleted,
+      notes: item.notes || null,
+      bookmarks: item.bookmarks || [],
+      last_watched_at: item.lastWatchedAt || null,
+      updated_at: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error('Failed to sync playlist item to Supabase', err);
+  }
+};
+
+export const deletePlaylistFromCloud = async (playlistId: string, userId: string) => {
+  if (!supabase) return;
+  try {
+    await supabase.from('study_playlists').delete().eq('id', playlistId).eq('user_id', userId);
+  } catch (err) {
+    console.error('Failed to delete playlist from Supabase', err);
+  }
+};
+
+export const deletePlaylistItemFromCloud = async (itemId: string, userId: string) => {
+  if (!supabase) return;
+  try {
+    await supabase.from('playlist_items').delete().eq('id', itemId).eq('user_id', userId);
+  } catch (err) {
+    console.error('Failed to delete playlist item from Supabase', err);
+  }
+};
+
 

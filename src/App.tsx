@@ -13,6 +13,7 @@ import { WeaknessMapView } from './components/views/WeaknessMapView';
 import { FocusModeView } from './components/views/FocusModeView';
 import { WeeklyAutopsyView } from './components/views/WeeklyAutopsyView';
 import { MilestonesView } from './components/views/MilestonesView';
+import { PlaylistTrackerView } from './components/views/PlaylistTrackerView';
 import { AddEditProblemModal } from './components/modals/AddEditProblemModal';
 import { BulkAddModal } from './components/modals/BulkAddModal';
 import { RevisionLogModal } from './components/modals/RevisionLogModal';
@@ -91,6 +92,8 @@ const MainApp: React.FC = () => {
             onOpenRevisionModal={handleOpenRevisionModal}
           />
         );
+      case 'playlists':
+        return <PlaylistTrackerView />;
       case 'weekly-autopsy':
         return <WeeklyAutopsyView />;
       case 'milestones':

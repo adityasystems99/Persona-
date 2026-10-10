@@ -14,6 +14,7 @@ import {
   Target,
   FileSearch,
   Trophy,
+  Video,
 } from 'lucide-react';
 import { useDSA } from '../../context/DSAContext';
 import { ActiveTab } from '../../types/dsa';
@@ -31,7 +32,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   mobileOpen,
   onCloseMobile,
 }) => {
-  const { activeTab, setActiveTab, stats, stlState, activeFocusSession, milestones, weakestTopics } = useDSA();
+  const { activeTab, setActiveTab, stats, stlState, activeFocusSession, milestones, weakestTopics, playlists } = useDSA();
 
   const unlockedMilestones = milestones.filter((m) => m.isUnlocked).length;
 
@@ -64,6 +65,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Revision Queue',
       icon: <Repeat2 size={20} />,
       badge: stats.revisionQueueCount > 0 ? stats.revisionQueueCount : undefined,
+    },
+    {
+      id: 'playlists',
+      label: 'Playlist Tracker',
+      icon: <Video size={20} />,
+      badge: playlists.length > 0 ? playlists.length : undefined,
     },
     {
       id: 'stl-practice',

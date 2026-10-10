@@ -2,6 +2,7 @@ import React from 'react';
 import { MetricCards } from '../dashboard/MetricCards';
 import { TodayTaskList } from '../dashboard/TodayTaskList';
 import { DashboardSTLPractice } from '../dashboard/DashboardSTLPractice';
+import { DashboardPlaylistsWidget } from '../dashboard/DashboardPlaylistsWidget';
 import { QuickAnalytics } from '../dashboard/QuickAnalytics';
 import { QuoteCard } from '../common/QuoteCard';
 import { AdaptiveRecoveryBanner } from '../dashboard/AdaptiveRecoveryBanner';
@@ -30,7 +31,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* Feature 8: Interview Readiness Meter */}
       <InterviewReadinessWidget />
 
-      {/* Main Content Grid: Left 2 Cols (Tasks + STL), Right Col (Quote + Stats) */}
+      {/* Main Content Grid: Left 2 Cols (Tasks + STL + Playlists), Right Col (Quote + Stats) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           {/* Today's Task List */}
@@ -39,6 +40,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             onOpenAddModal={onOpenAddModal}
             onOpenRevisionModal={onOpenRevisionModal}
           />
+
+          {/* Sequential Playlist & Timestamp Quick Tracker */}
+          <DashboardPlaylistsWidget />
 
           {/* Mandatory 30-min STL Practice Card */}
           <DashboardSTLPractice />

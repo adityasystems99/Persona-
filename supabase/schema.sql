@@ -352,8 +352,63 @@ alter publication supabase_realtime add table public.study_days;
 alter publication supabase_realtime add table public.dsa_problems;
 alter publication supabase_realtime add table public.stl_practice_sessions;
 alter publication supabase_realtime add table public.study_events;
-alter publication supabase_realtime add table public.focus_sessions;
-alter publication supabase_realtime add table public.stl_exercises;
-alter publication supabase_realtime add table public.milestones;
-alter publication supabase_realtime add table public.reschedule_events;
+-- 11. Study Playlists Table (Playlist Tracker & Timestamp Intelligence)
+create table if not exists public.study_playlists (
+    id text primary key,
+    user_id uuid references auth.users(id) on delete cascade not null,
+    category text not null check (category in ('dsa', 'system-design', 'dbms', 'cn-os')),
+    title text not null,
+    description text,
+    topic text,
+    order_index integer not null default 0,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now()
+);
+
+-- 12. Playlist Items Table (Sequential Videos & Timestamp Tracking)
+create table if not exists public.playlist_items (
+    id text primary key,
+    user_id uuid references auth.users(id) on delete cascade not null,
+    playlist_id text references public.study_playlists(id) on delete cascade not null,
+    title text not null,
+    video_url text not null,
+    topic text,
+    order_index integer not null default 0,
+    duration_seconds integer not null default 0,
+    watched_seconds integer not null default 0,
+    is_completed boolean not null default false,
+    notes text,
+    bookmarks jsonb not null default '[]'::jsonb,
+    last_watched_at timestamptz,
+    updated_at timestamptz not null default now()
+);
+
+alter table public.study_playlists enable row level security;
+alter table public.playlist_items enable row level security;
+
+create policy "Users can view their own study playlists"
+    on public.study_playlists for select using (auth.uid() = user_id);
+create policy "Users can insert their own study playlists"
+    on public.study_playlists for insert with check (auth.uid() = user_id);
+create policy "Users can update their own study playlists"
+    on public.study_playlists for update using (auth.uid() = user_id);
+create policy "Users can delete their own study playlists"
+    on public.study_playlists for delete using (auth.uid() = user_id);
+
+create policy "Users can view their own playlist items"
+    on public.playlist_items for select using (auth.uid() = user_id);
+create policy "Users can insert their own playlist items"
+    on public.playlist_items for insert with check (auth.uid() = user_id);
+create policy "Users can update their own playlist items"
+    on public.playlist_items for update using (auth.uid() = user_id);
+create policy "Users can delete their own playlist items"
+    on public.playlist_items for delete using (auth.uid() = user_id);
+
+create index if not exists idx_study_playlists_user_category on public.study_playlists(user_id, category, order_index);
+create index if not exists idx_playlist_items_playlist_order on public.playlist_items(playlist_id, order_index);
+create index if not exists idx_playlist_items_user on public.playlist_items(user_id);
+
+alter publication supabase_realtime add table public.study_playlists;
+alter publication supabase_realtime add table public.playlist_items;
+
 

@@ -28,6 +28,10 @@ import {
   TopicMasteryStats,
   ReadinessBreakdown,
   NotificationType,
+  Playlist,
+  PlaylistCategory,
+  PlaylistItem,
+  TimestampBookmark,
 } from '../types/dsa';
 import {
   loadStoredProblems,
@@ -54,6 +58,8 @@ import {
   saveStoredMilestones,
   loadStoredRescheduleEvents,
   saveStoredRescheduleEvents,
+  loadStoredPlaylists,
+  saveStoredPlaylists,
   getLastHourlyReminderTimestamp,
   setLastHourlyReminderTimestamp,
   clearAllAlgoPulseData,
@@ -75,6 +81,7 @@ import {
 import { INITIAL_STL_TOPICS } from '../data/stlTopics';
 import { INITIAL_STL_EXERCISES } from '../data/stlExercises';
 import { INITIAL_MILESTONES } from '../data/milestonesData';
+import { INITIAL_PLAYLISTS } from '../data/playlistData';
 import {
   computeTopicMasteryMap,
   computeInterviewReadiness,
@@ -95,6 +102,10 @@ import {
   syncSTLExerciseToCloud,
   syncMilestoneToCloud,
   syncRescheduleEventToCloud,
+  syncPlaylistToCloud,
+  syncPlaylistItemToCloud,
+  deletePlaylistFromCloud,
+  deletePlaylistItemFromCloud,
 } from '../lib/supabase';
 
 interface DSAContextType {
@@ -206,6 +217,51 @@ interface DSAContextType {
   milestones: Milestone[];
   checkMilestoneProgress: () => void;
 
+  // Playlist Tracker & Sequential Timestamps
+  playlists: Playlist[];
+  activePlaylistCategory: PlaylistCategory;
+  setActivePlaylistCategory: (category: PlaylistCategory) => void;
+  selectedPlaylistId: string | null;
+  setSelectedPlaylistId: (id: string | null) => void;
+  addPlaylist: (playlist: {
+    category: PlaylistCategory;
+    title: string;
+    description?: string;
+    topic?: string;
+  }) => Playlist;
+  updatePlaylist: (id: string, updates: Partial<Playlist>) => void;
+  deletePlaylist: (id: string) => void;
+  reorderPlaylists: (playlistId: string, direction: 'up' | 'down') => void;
+  addPlaylistItem: (
+    playlistId: string,
+    item: {
+      title: string;
+      videoUrl: string;
+      topic?: string;
+      durationSeconds: number;
+      notes?: string;
+    }
+  ) => PlaylistItem;
+  updatePlaylistItem: (playlistId: string, itemId: string, updates: Partial<PlaylistItem>) => void;
+  deletePlaylistItem: (playlistId: string, itemId: string) => void;
+  reorderPlaylistItems: (playlistId: string, itemId: string, direction: 'up' | 'down') => void;
+  updateWatchTimestamp: (
+    playlistId: string,
+    itemId: string,
+    watchedSeconds: number,
+    markCompleted?: boolean
+  ) => void;
+  addTimestampBookmark: (
+    playlistId: string,
+    itemId: string,
+    bookmark: {
+      timestampSeconds: number;
+      label: string;
+      note?: string;
+    }
+  ) => void;
+  deleteTimestampBookmark: (playlistId: string, itemId: string, bookmarkId: string) => void;
+
   // Settings & alerts (Feature 9)
   updateSettings: (updates: Partial<AccountabilitySettings>) => void;
   addNotification: (
@@ -256,6 +312,9 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeFocusSession, setActiveFocusSession] = useState<ActiveFocusState | null>(loadStoredActiveFocus);
   const [milestones, setMilestones] = useState<Milestone[]>(loadStoredMilestones);
   const [rescheduleEvents, setRescheduleEvents] = useState<RescheduleEvent[]>(loadStoredRescheduleEvents);
+  const [playlists, setPlaylists] = useState<Playlist[]>(loadStoredPlaylists);
+  const [activePlaylistCategory, setActivePlaylistCategory] = useState<PlaylistCategory>('dsa');
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
 
   // Supabase Auth State
@@ -342,6 +401,9 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     for (const r of rescheduleEvents) {
       await syncRescheduleEventToCloud(r, userId);
     }
+    for (const pl of playlists) {
+      await syncPlaylistToCloud(pl, userId);
+    }
   };
 
   // Local storage synchronization
@@ -392,6 +454,10 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     saveStoredRescheduleEvents(rescheduleEvents);
   }, [rescheduleEvents]);
+
+  useEffect(() => {
+    saveStoredPlaylists(playlists);
+  }, [playlists]);
 
   // Feature 9: Notification Intelligence & Deduplication
   const addNotification = useCallback(
@@ -1523,6 +1589,274 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     [problems, studyLogs, focusSessions, rescheduleEvents]
   );
 
+  // Playlist Tracker & Sequential Timestamps
+  const addPlaylist = (data: {
+    category: PlaylistCategory;
+    title: string;
+    description?: string;
+    topic?: string;
+  }): Playlist => {
+    const categoryPlaylists = playlists.filter((p) => p.category === data.category);
+    const newPlaylist: Playlist = {
+      id: `pl-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      category: data.category,
+      title: data.title.trim(),
+      description: data.description?.trim(),
+      topic: data.topic?.trim(),
+      order: categoryPlaylists.length + 1,
+      items: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setPlaylists((prev) => [...prev, newPlaylist]);
+    if (currentUser) syncPlaylistToCloud(newPlaylist, currentUser.id);
+    addNotification('Playlist Created', `Created playlist "${newPlaylist.title}".`, 'info');
+    return newPlaylist;
+  };
+
+  const updatePlaylist = (id: string, updates: Partial<Playlist>) => {
+    setPlaylists((prev) =>
+      prev.map((pl) => {
+        if (pl.id !== id) return pl;
+        const updated = {
+          ...pl,
+          ...updates,
+          updatedAt: new Date().toISOString(),
+        };
+        if (currentUser) syncPlaylistToCloud(updated, currentUser.id);
+        return updated;
+      })
+    );
+  };
+
+  const deletePlaylist = (id: string) => {
+    setPlaylists((prev) => prev.filter((pl) => pl.id !== id));
+    if (currentUser) deletePlaylistFromCloud(id, currentUser.id);
+    addNotification('Playlist Removed', 'Playlist and video list deleted.', 'info');
+  };
+
+  const reorderPlaylists = (playlistId: string, direction: 'up' | 'down') => {
+    setPlaylists((prev) => {
+      const target = prev.find((p) => p.id === playlistId);
+      if (!target) return prev;
+      const categoryPlaylists = prev
+        .filter((p) => p.category === target.category)
+        .sort((a, b) => a.order - b.order);
+
+      const idx = categoryPlaylists.findIndex((p) => p.id === playlistId);
+      if (idx === -1) return prev;
+      const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+      if (targetIdx < 0 || targetIdx >= categoryPlaylists.length) return prev;
+
+      const currentItem = categoryPlaylists[idx];
+      const otherItem = categoryPlaylists[targetIdx];
+
+      const currentOrder = currentItem.order;
+      currentItem.order = otherItem.order;
+      otherItem.order = currentOrder;
+
+      if (currentUser) {
+        syncPlaylistToCloud(currentItem, currentUser.id);
+        syncPlaylistToCloud(otherItem, currentUser.id);
+      }
+
+      return [...prev];
+    });
+  };
+
+  const addPlaylistItem = (
+    playlistId: string,
+    itemData: {
+      title: string;
+      videoUrl: string;
+      topic?: string;
+      durationSeconds: number;
+      notes?: string;
+    }
+  ): PlaylistItem => {
+    const playlist = playlists.find((p) => p.id === playlistId);
+    const existingItems = playlist ? playlist.items : [];
+    const newItem: PlaylistItem = {
+      id: `vi-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      playlistId,
+      title: itemData.title.trim(),
+      videoUrl: itemData.videoUrl.trim(),
+      topic: itemData.topic?.trim(),
+      order: existingItems.length + 1,
+      durationSeconds: itemData.durationSeconds || 0,
+      watchedSeconds: 0,
+      isCompleted: false,
+      notes: itemData.notes?.trim(),
+      bookmarks: [],
+    };
+
+    setPlaylists((prev) =>
+      prev.map((pl) => {
+        if (pl.id !== playlistId) return pl;
+        const updated = {
+          ...pl,
+          items: [...pl.items, newItem],
+          updatedAt: new Date().toISOString(),
+        };
+        if (currentUser) {
+          syncPlaylistToCloud(updated, currentUser.id);
+          syncPlaylistItemToCloud(newItem, currentUser.id);
+        }
+        return updated;
+      })
+    );
+    addNotification('Video Added', `Added "${newItem.title}" to sequence #${newItem.order}.`, 'info');
+    return newItem;
+  };
+
+  const updatePlaylistItem = (playlistId: string, itemId: string, updates: Partial<PlaylistItem>) => {
+    setPlaylists((prev) =>
+      prev.map((pl) => {
+        if (pl.id !== playlistId) return pl;
+        const updatedItems = pl.items.map((item) => {
+          if (item.id !== itemId) return item;
+          const updated = { ...item, ...updates };
+          if (currentUser) syncPlaylistItemToCloud(updated, currentUser.id);
+          return updated;
+        });
+        return { ...pl, items: updatedItems, updatedAt: new Date().toISOString() };
+      })
+    );
+  };
+
+  const deletePlaylistItem = (playlistId: string, itemId: string) => {
+    setPlaylists((prev) =>
+      prev.map((pl) => {
+        if (pl.id !== playlistId) return pl;
+        const remaining = pl.items.filter((it) => it.id !== itemId);
+        const reindexed = remaining.map((it, idx) => ({ ...it, order: idx + 1 }));
+        if (currentUser) {
+          deletePlaylistItemFromCloud(itemId, currentUser.id);
+          reindexed.forEach((it) => syncPlaylistItemToCloud(it, currentUser.id));
+        }
+        return { ...pl, items: reindexed, updatedAt: new Date().toISOString() };
+      })
+    );
+    addNotification('Video Removed', 'Item removed from playlist sequence.', 'info');
+  };
+
+  const reorderPlaylistItems = (playlistId: string, itemId: string, direction: 'up' | 'down') => {
+    setPlaylists((prev) =>
+      prev.map((pl) => {
+        if (pl.id !== playlistId) return pl;
+        const sorted = [...pl.items].sort((a, b) => a.order - b.order);
+        const idx = sorted.findIndex((it) => it.id === itemId);
+        if (idx === -1) return pl;
+        const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+        if (targetIdx < 0 || targetIdx >= sorted.length) return pl;
+
+        const currentItem = sorted[idx];
+        const otherItem = sorted[targetIdx];
+
+        const tempOrder = currentItem.order;
+        currentItem.order = otherItem.order;
+        otherItem.order = tempOrder;
+
+        if (currentUser) {
+          syncPlaylistItemToCloud(currentItem, currentUser.id);
+          syncPlaylistItemToCloud(otherItem, currentUser.id);
+        }
+
+        return {
+          ...pl,
+          items: [...sorted].sort((a, b) => a.order - b.order),
+          updatedAt: new Date().toISOString(),
+        };
+      })
+    );
+  };
+
+  const updateWatchTimestamp = (
+    playlistId: string,
+    itemId: string,
+    watchedSeconds: number,
+    markCompleted?: boolean
+  ) => {
+    setPlaylists((prev) =>
+      prev.map((pl) => {
+        if (pl.id !== playlistId) return pl;
+        const updatedItems = pl.items.map((item) => {
+          if (item.id !== itemId) return item;
+          const isDone =
+            markCompleted !== undefined
+              ? markCompleted
+              : item.durationSeconds > 0 && watchedSeconds >= item.durationSeconds;
+
+          const updated: PlaylistItem = {
+            ...item,
+            watchedSeconds,
+            isCompleted: isDone,
+            lastWatchedAt: new Date().toISOString(),
+          };
+          if (currentUser) syncPlaylistItemToCloud(updated, currentUser.id);
+          return updated;
+        });
+        return { ...pl, items: updatedItems, updatedAt: new Date().toISOString() };
+      })
+    );
+  };
+
+  const addTimestampBookmark = (
+    playlistId: string,
+    itemId: string,
+    bookmark: {
+      timestampSeconds: number;
+      label: string;
+      note?: string;
+    }
+  ) => {
+    const newBookmark: TimestampBookmark = {
+      id: `bm-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      timestampSeconds: bookmark.timestampSeconds,
+      label: bookmark.label.trim(),
+      note: bookmark.note?.trim(),
+      createdAt: new Date().toISOString(),
+    };
+
+    setPlaylists((prev) =>
+      prev.map((pl) => {
+        if (pl.id !== playlistId) return pl;
+        const updatedItems = pl.items.map((item) => {
+          if (item.id !== itemId) return item;
+          const updated = {
+            ...item,
+            bookmarks: [...item.bookmarks, newBookmark].sort(
+              (a, b) => a.timestampSeconds - b.timestampSeconds
+            ),
+          };
+          if (currentUser) syncPlaylistItemToCloud(updated, currentUser.id);
+          return updated;
+        });
+        return { ...pl, items: updatedItems, updatedAt: new Date().toISOString() };
+      })
+    );
+    addNotification('Timestamp Saved', `Bookmarked key moment at ${bookmark.label}.`, 'info');
+  };
+
+  const deleteTimestampBookmark = (playlistId: string, itemId: string, bookmarkId: string) => {
+    setPlaylists((prev) =>
+      prev.map((pl) => {
+        if (pl.id !== playlistId) return pl;
+        const updatedItems = pl.items.map((item) => {
+          if (item.id !== itemId) return item;
+          const updated = {
+            ...item,
+            bookmarks: item.bookmarks.filter((b) => b.id !== bookmarkId),
+          };
+          if (currentUser) syncPlaylistItemToCloud(updated, currentUser.id);
+          return updated;
+        });
+        return { ...pl, items: updatedItems, updatedAt: new Date().toISOString() };
+      })
+    );
+  };
+
   // Settings & notifications
   const updateSettings = (updates: Partial<AccountabilitySettings>) => {
     setSettings((prev) => {
@@ -1558,6 +1892,7 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setStlState({ ...INITIAL_STL_STATE, date: todayStr });
     setStlTopics(INITIAL_STL_TOPICS);
     setStlExercises(INITIAL_STL_EXERCISES);
+    setPlaylists(INITIAL_PLAYLISTS);
     setSettings(DEFAULT_SETTINGS);
     setStudyLogs(INITIAL_PAST_LOGS);
     setMilestones(INITIAL_MILESTONES);
@@ -1568,7 +1903,7 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       {
         id: 'sample-reset',
         title: 'AlgoPulse 2.0 Telemetry Initialized',
-        message: 'Loaded sample questions, 7-day analytics history, STL exercises, and milestones.',
+        message: 'Loaded sample questions, 7-day analytics history, STL exercises, playlists, and milestones.',
         timestamp: new Date().toISOString(),
         type: 'info',
         read: false,
@@ -1590,6 +1925,7 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
     setStlState({ ...INITIAL_STL_STATE, date: todayStr, notes: '', codeSnippet: '' });
     setStlExercises(INITIAL_STL_EXERCISES);
+    setPlaylists([]);
     setStudyLogs([]);
     setNotifications([]);
     setFocusSessions([]);
@@ -1609,6 +1945,7 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       if (Array.isArray(data.stlTopics)) setStlTopics(data.stlTopics as STLTopicItem[]);
       if (Array.isArray(data.stlExercises)) setStlExercises(data.stlExercises as STLExercise[]);
+      if (Array.isArray(data.playlists)) setPlaylists(data.playlists as Playlist[]);
       if (data.settings && typeof data.settings === 'object') {
         setSettings(data.settings as AccountabilitySettings);
       }
@@ -1725,6 +2062,22 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         getWeeklyAutopsyData,
         milestones,
         checkMilestoneProgress,
+        playlists,
+        activePlaylistCategory,
+        setActivePlaylistCategory,
+        selectedPlaylistId,
+        setSelectedPlaylistId,
+        addPlaylist,
+        updatePlaylist,
+        deletePlaylist,
+        reorderPlaylists,
+        addPlaylistItem,
+        updatePlaylistItem,
+        deletePlaylistItem,
+        reorderPlaylistItems,
+        updateWatchTimestamp,
+        addTimestampBookmark,
+        deleteTimestampBookmark,
         updateSettings,
         addNotification,
         markNotificationRead,

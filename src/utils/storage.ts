@@ -10,6 +10,7 @@ import {
   FocusSession,
   Milestone,
   RescheduleEvent,
+  Playlist,
 } from '../types/dsa';
 import {
   INITIAL_PROBLEMS,
@@ -21,6 +22,7 @@ import {
 import { INITIAL_STL_TOPICS } from '../data/stlTopics';
 import { INITIAL_STL_EXERCISES } from '../data/stlExercises';
 import { INITIAL_MILESTONES } from '../data/milestonesData';
+import { INITIAL_PLAYLISTS } from '../data/playlistData';
 
 const STORAGE_KEYS = {
   PROBLEMS: 'algopulse_problems_v1',
@@ -36,6 +38,7 @@ const STORAGE_KEYS = {
   ACTIVE_FOCUS: 'algopulse_active_focus_state_v2',
   MILESTONES: 'algopulse_milestones_v2',
   RESCHEDULE_EVENTS: 'algopulse_reschedule_events_v2',
+  PLAYLISTS: 'algopulse_playlists_v2',
 };
 
 export const loadStoredProblems = (): Problem[] => {
@@ -327,6 +330,25 @@ export const saveStoredRescheduleEvents = (events: RescheduleEvent[]): void => {
     localStorage.setItem(STORAGE_KEYS.RESCHEDULE_EVENTS, JSON.stringify(events));
   } catch (e) {
     console.error('Error saving reschedule events', e);
+  }
+};
+
+// --- Playlists & Video Timestamps Storage ---
+export const loadStoredPlaylists = (): Playlist[] => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.PLAYLISTS);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {
+    console.error('Error loading playlists', e);
+  }
+  return INITIAL_PLAYLISTS;
+};
+
+export const saveStoredPlaylists = (playlists: Playlist[]): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.PLAYLISTS, JSON.stringify(playlists));
+  } catch (e) {
+    console.error('Error saving playlists', e);
   }
 };
 
