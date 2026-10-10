@@ -349,6 +349,7 @@ export interface Playlist {
 
 export type ActiveTab = 
   | 'dashboard'
+  | 'academic-tracker'
   | 'daily-plan'
   | 'question-bank'
   | 'stl-practice'

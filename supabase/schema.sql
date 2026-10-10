@@ -411,4 +411,265 @@ create index if not exists idx_playlist_items_user on public.playlist_items(user
 alter publication supabase_realtime add table public.study_playlists;
 alter publication supabase_realtime add table public.playlist_items;
 
+-- ==============================================================================
+-- AlgoPulse 2.0: Academic Intelligence Tracker Supabase Schema
+-- ==============================================================================
+
+create table if not exists public.academic_semesters (
+    id text primary key,
+    user_id uuid references auth.users(id) on delete cascade not null,
+    semester_number integer not null default 5,
+    title text not null default 'Semester 5 — Academic Sprint',
+    start_date text,
+    end_date text,
+    target_gpa numeric(3, 2) default 9.00,
+    is_active boolean default true,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
+
+create table if not exists public.academic_subjects (
+    id text primary key,
+    user_id uuid references auth.users(id) on delete cascade not null,
+    semester_id text references public.academic_semesters(id) on delete cascade,
+    code text not null,
+    name text not null,
+    credits numeric(3, 1) default 4.0,
+    description text,
+    color text default '#8b5cf6',
+    exam_date text,
+    target_score numeric(4, 1) default 85.0,
+    syllabus_url text,
+    is_archived boolean default false,
+    order_index integer default 0,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
+
+create table if not exists public.academic_units (
+    id text primary key,
+    user_id uuid references auth.users(id) on delete cascade not null,
+    subject_id text references public.academic_subjects(id) on delete cascade not null,
+    unit_number integer not null,
+    title text not null,
+    description text,
+    weightage_percentage integer,
+    order_index integer default 0,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
+
+create table if not exists public.academic_topics (
+    id text primary key,
+    user_id uuid references auth.users(id) on delete cascade not null,
+    unit_id text references public.academic_units(id) on delete cascade not null,
+    subject_id text references public.academic_subjects(id) on delete cascade not null,
+    title text not null,
+    description text,
+    is_completed boolean default false,
+    completed_at timestamptz,
+    difficulty text check (difficulty in ('Easy', 'Medium', 'Hard')) default 'Medium',
+    estimated_minutes integer default 45,
+    order_index integer default 0,
+    notes text,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
+
+create table if not exists public.academic_tasks (
+    id text primary key,
+    user_id uuid references auth.users(id) on delete cascade not null,
+    subject_id text references public.academic_subjects(id) on delete cascade not null,
+    unit_id text references public.academic_units(id) on delete set null,
+    topic_id text references public.academic_topics(id) on delete set null,
+    title text not null,
+    description text,
+    scheduled_date text not null,
+    planned_duration_minutes integer default 60,
+    actual_time_minutes integer default 0,
+    priority text check (priority in ('Low', 'Medium', 'High', 'Urgent')) default 'Medium',
+    status text check (status in ('pending', 'in_progress', 'completed', 'skipped')) default 'pending',
+    completion_timestamp timestamptz,
+    notes text,
+    needs_revision boolean default false,
+    skip_reason text,
+    reschedule_count integer default 0,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
+
+create table if not exists public.academic_study_sessions (
+    id text primary key,
+    user_id uuid references auth.users(id) on delete cascade not null,
+    subject_id text references public.academic_subjects(id) on delete cascade not null,
+    task_id text references public.academic_tasks(id) on delete set null,
+    date text not null,
+    duration_minutes integer default 0,
+    notes text,
+    focus_score integer,
+    created_at timestamptz default now()
+);
+
+create table if not exists public.academic_assignments (
+    id text primary key,
+    user_id uuid references auth.users(id) on delete cascade not null,
+    subject_id text references public.academic_subjects(id) on delete cascade not null,
+    title text not null,
+    description text,
+    assigned_date text,
+    due_date text not null,
+    priority text check (priority in ('Low', 'Medium', 'High', 'Urgent')) default 'Medium',
+    status text check (status in ('pending', 'in_progress', 'completed', 'submitted', 'graded')) default 'pending',
+    resource_url text,
+    submission_notes text,
+    max_marks numeric(5, 2),
+    obtained_marks numeric(5, 2),
+    completion_timestamp timestamptz,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
+
+create table if not exists public.academic_exams (
+    id text primary key,
+    user_id uuid references auth.users(id) on delete cascade not null,
+    subject_id text references public.academic_subjects(id) on delete cascade not null,
+    title text not null,
+    exam_date text not null,
+    exam_time text default '10:00',
+    exam_type text check (exam_type in ('Mid-Semester', 'End-Semester', 'Quiz', 'Lab Exam', 'Class Test')) default 'Mid-Semester',
+    syllabus_coverage text,
+    preparation_status text check (preparation_status in ('Not Started', 'In Progress', 'Ready', 'Mastered')) default 'Not Started',
+    target_score numeric(4, 1) default 85.0,
+    weightage_percentage integer,
+    notes text,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
+
+create table if not exists public.academic_notes (
+    id text primary key,
+    user_id uuid references auth.users(id) on delete cascade not null,
+    subject_id text references public.academic_subjects(id) on delete cascade not null,
+    unit_id text references public.academic_units(id) on delete set null,
+    topic_id text references public.academic_topics(id) on delete set null,
+    title text not null,
+    content text not null,
+    tags text[] default '{}'::text[],
+    resource_url text,
+    is_pinned boolean default false,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
+
+create table if not exists public.academic_resources (
+    id text primary key,
+    user_id uuid references auth.users(id) on delete cascade not null,
+    subject_id text references public.academic_subjects(id) on delete cascade not null,
+    title text not null,
+    resource_type text check (resource_type in ('Book / Textbook', 'Lecture Slides', 'Video Lecture', 'PYQ / Papers', 'Cheat Sheet', 'Website')) default 'Lecture Slides',
+    url text not null,
+    description text,
+    tags text[] default '{}'::text[],
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
+
+create table if not exists public.academic_revisions (
+    id text primary key,
+    user_id uuid references auth.users(id) on delete cascade not null,
+    subject_id text references public.academic_subjects(id) on delete cascade not null,
+    topic_id text references public.academic_topics(id) on delete set null,
+    title text not null,
+    last_studied_date text not null,
+    last_revision_date text,
+    scheduled_date text not null,
+    stage integer default 0,
+    confidence_rating integer default 3 check (confidence_rating between 1 and 5),
+    last_outcome text check (last_outcome in ('strong', 'partial', 'poor')),
+    history jsonb default '[]'::jsonb,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
+
+create table if not exists public.academic_attendance (
+    id text primary key,
+    user_id uuid references auth.users(id) on delete cascade not null,
+    subject_id text references public.academic_subjects(id) on delete cascade not null,
+    class_date text not null,
+    class_type text check (class_type in ('Lecture', 'Lab', 'Tutorial')) default 'Lecture',
+    status text check (status in ('present', 'absent', 'excused')) default 'present',
+    notes text,
+    created_at timestamptz default now(),
+    unique(user_id, subject_id, class_date, class_type)
+);
+
+create table if not exists public.academic_settings (
+    user_id uuid primary key references auth.users(id) on delete cascade,
+    semester_id text,
+    minimum_attendance_threshold integer default 75,
+    daily_study_target_minutes integer default 180,
+    revision_intervals integer[] default '{1, 3, 7, 14, 30}'::integer[],
+    reminders_enabled boolean default true,
+    quiet_hours_start text default '23:30',
+    quiet_hours_end text default '07:30',
+    updated_at timestamptz default now()
+);
+
+create table if not exists public.academic_notifications (
+    id text primary key,
+    user_id uuid references auth.users(id) on delete cascade not null,
+    type text not null,
+    title text not null,
+    message text not null,
+    read_at timestamptz,
+    related_id text,
+    created_at timestamptz default now()
+);
+
+-- Indexes
+create index if not exists idx_academic_subjects_user on public.academic_subjects(user_id, is_archived);
+create index if not exists idx_academic_tasks_user_date on public.academic_tasks(user_id, scheduled_date);
+create index if not exists idx_academic_assignments_due on public.academic_assignments(user_id, due_date, status);
+create index if not exists idx_academic_exams_date on public.academic_exams(user_id, exam_date);
+create index if not exists idx_academic_revisions_scheduled on public.academic_revisions(user_id, scheduled_date);
+create index if not exists idx_academic_attendance_user_sub on public.academic_attendance(user_id, subject_id, class_date);
+
+-- Enable RLS
+alter table public.academic_semesters enable row level security;
+alter table public.academic_subjects enable row level security;
+alter table public.academic_units enable row level security;
+alter table public.academic_topics enable row level security;
+alter table public.academic_tasks enable row level security;
+alter table public.academic_study_sessions enable row level security;
+alter table public.academic_assignments enable row level security;
+alter table public.academic_exams enable row level security;
+alter table public.academic_notes enable row level security;
+alter table public.academic_resources enable row level security;
+alter table public.academic_revisions enable row level security;
+alter table public.academic_attendance enable row level security;
+alter table public.academic_settings enable row level security;
+alter table public.academic_notifications enable row level security;
+
+-- Policies
+create policy "Users manage own semesters" on public.academic_semesters for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "Users manage own subjects" on public.academic_subjects for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "Users manage own units" on public.academic_units for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "Users manage own topics" on public.academic_topics for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "Users manage own tasks" on public.academic_tasks for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "Users manage own study sessions" on public.academic_study_sessions for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "Users manage own assignments" on public.academic_assignments for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "Users manage own exams" on public.academic_exams for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "Users manage own notes" on public.academic_notes for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "Users manage own resources" on public.academic_resources for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "Users manage own revisions" on public.academic_revisions for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "Users manage own attendance" on public.academic_attendance for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "Users manage own settings" on public.academic_settings for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "Users manage own notifications" on public.academic_notifications for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Realtime publication
+alter publication supabase_realtime add table public.academic_subjects;
+alter publication supabase_realtime add table public.academic_tasks;
+alter publication supabase_realtime add table public.academic_assignments;
+alter publication supabase_realtime add table public.academic_attendance;
+
 

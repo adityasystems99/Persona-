@@ -1,0 +1,116 @@
+import { AcademicSubject, AcademicSemester, AcademicSettings } from '../types/academic';
+
+export const INITIAL_SEMESTER_5: AcademicSemester = {
+  id: 'sem-5',
+  semesterNumber: 5,
+  title: 'Semester 5 — Academic Sprint',
+  startDate: new Date().toISOString().slice(0, 10),
+  targetGpa: 9.0,
+  isActive: true,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+};
+
+export const INITIAL_SEMESTER_5_SUBJECTS: Omit<AcademicSubject, 'userId'>[] = [
+  {
+    id: 'sub-daa',
+    semesterId: 'sem-5',
+    code: 'DAA',
+    name: 'Design and Analysis of Algorithms',
+    credits: 4,
+    description: 'Algorithm design paradigms, asymptotic analysis, divide & conquer, greedy, dynamic programming, and graph algorithms.',
+    color: '#8b5cf6', // Violet
+    targetScore: 90,
+    isArchived: false,
+    orderIndex: 0,
+    units: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'sub-cn',
+    semesterId: 'sem-5',
+    code: 'CN',
+    name: 'Computer Networks',
+    credits: 4,
+    description: 'OSI/TCP-IP models, packet switching, data link protocols, routing algorithms, transport layer protocols, and socket programming.',
+    color: '#06b6d4', // Cyan
+    targetScore: 85,
+    isArchived: false,
+    orderIndex: 1,
+    units: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'sub-se',
+    semesterId: 'sem-5',
+    code: 'SE',
+    name: 'Software Engineering',
+    credits: 3,
+    description: 'SDLC methodologies, Agile, requirements engineering, architectural design, software testing, QA, and maintenance.',
+    color: '#10b981', // Emerald
+    targetScore: 85,
+    isArchived: false,
+    orderIndex: 2,
+    units: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'sub-ee',
+    semesterId: 'sem-5',
+    code: 'EE',
+    name: 'Engineering Economics',
+    credits: 3,
+    description: 'Cost estimation, interest formulas, cash-flow diagrams, present worth analysis, depreciation, and financial feasibility.',
+    color: '#f59e0b', // Amber
+    targetScore: 85,
+    isArchived: false,
+    orderIndex: 3,
+    units: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'sub-dos',
+    semesterId: 'sem-5',
+    code: 'DOS',
+    name: 'Distributed Operating Systems',
+    credits: 4,
+    description: 'Distributed synchronization, logical clocks, mutual exclusion, election algorithms, deadlock handling, RPC, and distributed file systems.',
+    color: '#ec4899', // Pink / Fuchsia
+    targetScore: 85,
+    isArchived: false,
+    orderIndex: 4,
+    units: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'sub-dmdw',
+    semesterId: 'sem-5',
+    code: 'DMDW',
+    name: 'Data Mining and Data Warehousing',
+    credits: 4,
+    description: 'Data warehousing architectures, OLAP cubes, association rule mining, classification, clustering algorithms, and web mining.',
+    color: '#3b82f6', // Blue
+    targetScore: 85,
+    isArchived: false,
+    orderIndex: 5,
+    units: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
+
+export const DEFAULT_ACADEMIC_SETTINGS: AcademicSettings = {
+  semesterId: 'sem-5',
+  minimumAttendanceThreshold: 75,
+  dailyStudyTargetMinutes: 180,
+  revisionIntervals: [1, 3, 7, 14, 30],
+  remindersEnabled: true,
+  quietHoursStart: '23:30',
+  quietHoursEnd: '07:30',
+  updatedAt: new Date().toISOString(),
+};

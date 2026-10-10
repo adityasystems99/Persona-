@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DSAProvider, useDSA } from './context/DSAContext';
+import { AcademicProvider } from './context/AcademicContext';
 import { Sidebar } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
 import { DashboardView } from './components/views/DashboardView';
@@ -14,6 +15,7 @@ import { FocusModeView } from './components/views/FocusModeView';
 import { WeeklyAutopsyView } from './components/views/WeeklyAutopsyView';
 import { MilestonesView } from './components/views/MilestonesView';
 import { PlaylistTrackerView } from './components/views/PlaylistTrackerView';
+import { AcademicTrackerContainer } from './components/academic/AcademicTrackerContainer';
 import { AddEditProblemModal } from './components/modals/AddEditProblemModal';
 import { BulkAddModal } from './components/modals/BulkAddModal';
 import { RevisionLogModal } from './components/modals/RevisionLogModal';
@@ -22,7 +24,22 @@ import { AuthModal } from './components/modals/AuthModal';
 import { Problem } from './types/dsa';
 
 const MainApp: React.FC = () => {
-  const { activeTab, authModalOpen, setAuthModalOpen } = useDSA();
+  const { activeTab, setActiveTab, authModalOpen, setAuthModalOpen } = useDSA();
+
+  // Direct URL Navigation Support for /academic-tracker
+  useEffect(() => {
+    if (window.location.pathname.startsWith('/academic-tracker')) {
+      setActiveTab('academic-tracker');
+    }
+
+    const handlePop = () => {
+      if (window.location.pathname.startsWith('/academic-tracker')) {
+        setActiveTab('academic-tracker');
+      }
+    };
+    window.addEventListener('popstate', handlePop);
+    return () => window.removeEventListener('popstate', handlePop);
+  }, [setActiveTab]);
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -52,6 +69,8 @@ const MainApp: React.FC = () => {
 
   const renderActiveView = () => {
     switch (activeTab) {
+      case 'academic-tracker':
+        return <AcademicTrackerContainer />;
       case 'dashboard':
         return (
           <DashboardView
@@ -183,7 +202,9 @@ const MainApp: React.FC = () => {
 export function App() {
   return (
     <DSAProvider>
-      <MainApp />
+      <AcademicProvider>
+        <MainApp />
+      </AcademicProvider>
     </DSAProvider>
   );
 }

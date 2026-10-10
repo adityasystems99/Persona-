@@ -1,5 +1,6 @@
 import {
   LayoutDashboard,
+  GraduationCap,
   CalendarCheck2,
   Database,
   Timer,
@@ -41,6 +42,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'dashboard',
       label: 'Dashboard',
       icon: <LayoutDashboard size={20} />,
+    },
+    {
+      id: 'academic-tracker',
+      label: 'Academic Tracker',
+      icon: <GraduationCap size={20} />,
+      badge: 'Sem 5',
     },
     {
       id: 'daily-plan',
@@ -109,6 +116,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const handleSelect = (tab: ActiveTab) => {
     setActiveTab(tab);
+    if (tab === 'academic-tracker') {
+      if (!window.location.pathname.startsWith('/academic-tracker')) {
+        window.history.pushState(null, '', '/academic-tracker');
+      }
+    } else {
+      if (window.location.pathname.startsWith('/academic-tracker')) {
+        window.history.pushState(null, '', '/');
+      }
+    }
     onCloseMobile();
   };
 
