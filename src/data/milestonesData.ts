@@ -8,9 +8,8 @@ export const INITIAL_MILESTONES: Milestone[] = [
     description: 'Solve your first DSA problem completely independently without consulting hints.',
     icon: 'Sword',
     targetValue: 1,
-    currentValue: 1,
-    isUnlocked: true,
-    unlockedAt: '2026-10-04T10:00:00.000Z',
+    currentValue: 0,
+    isUnlocked: false,
   },
   {
     id: 'memory_architect',
@@ -29,7 +28,7 @@ export const INITIAL_MILESTONES: Milestone[] = [
     description: 'Complete 7 days of consistent 30-minute C++ STL practice sessions.',
     icon: 'Flame',
     targetValue: 7,
-    currentValue: 6,
+    currentValue: 0,
     isUnlocked: false,
   },
   {
@@ -39,7 +38,7 @@ export const INITIAL_MILESTONES: Milestone[] = [
     description: 'Solve 3 or more problems from a single topic independently.',
     icon: 'Award',
     targetValue: 3,
-    currentValue: 2,
+    currentValue: 0,
     isUnlocked: false,
   },
   {
@@ -49,7 +48,7 @@ export const INITIAL_MILESTONES: Milestone[] = [
     description: 'Document rigorous time and space complexity analysis on 5 solved problems.',
     icon: 'Code2',
     targetValue: 5,
-    currentValue: 4,
+    currentValue: 0,
     isUnlocked: false,
   },
   {

@@ -114,7 +114,14 @@ const MainApp: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-800 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#070814] text-slate-100 flex flex-col font-sans relative overflow-x-hidden">
+      {/* Cosmic Space Nebula Ambient Glows */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-violet-600/12 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 -right-32 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-10 left-1/3 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl" />
+      </div>
+
       {/* Sidebar Navigation */}
       <Sidebar
         collapsed={sidebarCollapsed}
@@ -125,7 +132,7 @@ const MainApp: React.FC = () => {
 
       {/* Main Content Area */}
       <div
-        className={`flex-1 flex flex-col transition-all duration-300 ${
+        className={`flex-1 flex flex-col transition-all duration-300 relative z-10 ${
           sidebarCollapsed ? 'md:ml-20' : 'md:ml-64'
         }`}
       >

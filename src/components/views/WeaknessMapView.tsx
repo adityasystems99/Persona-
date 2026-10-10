@@ -53,31 +53,31 @@ export const WeaknessMapView: React.FC<WeaknessMapViewProps> = ({
     switch (status) {
       case 'Critical Weakness':
         return (
-          <span className="px-2.5 py-0.5 text-[11px] font-extrabold rounded-full bg-rose-100 text-rose-700 border border-rose-300">
-            Critical Weakness
+          <span className="px-2.5 py-0.5 text-[11px] font-extrabold rounded-full bg-violet-950/80 text-violet-300 border border-violet-500/40">
+            Critical Focus
           </span>
         );
       case 'Needs Practice':
         return (
-          <span className="px-2.5 py-0.5 text-[11px] font-extrabold rounded-full bg-amber-100 text-amber-700 border border-amber-300">
+          <span className="px-2.5 py-0.5 text-[11px] font-extrabold rounded-full bg-amber-950/80 text-amber-300 border border-amber-500/40">
             Needs Practice
           </span>
         );
       case 'Developing':
         return (
-          <span className="px-2.5 py-0.5 text-[11px] font-extrabold rounded-full bg-blue-100 text-blue-700 border border-blue-300">
+          <span className="px-2.5 py-0.5 text-[11px] font-extrabold rounded-full bg-indigo-950/80 text-indigo-300 border border-indigo-500/40">
             Developing
           </span>
         );
       case 'Proficient':
         return (
-          <span className="px-2.5 py-0.5 text-[11px] font-extrabold rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300">
+          <span className="px-2.5 py-0.5 text-[11px] font-extrabold rounded-full bg-emerald-950/80 text-emerald-300 border border-emerald-500/40">
             Proficient
           </span>
         );
       case 'Mastered':
         return (
-          <span className="px-2.5 py-0.5 text-[11px] font-extrabold rounded-full bg-teal-100 text-teal-800 border border-teal-300">
+          <span className="px-2.5 py-0.5 text-[11px] font-extrabold rounded-full bg-teal-950/80 text-teal-300 border border-teal-500/40">
             Mastered
           </span>
         );
@@ -85,52 +85,51 @@ export const WeaknessMapView: React.FC<WeaknessMapViewProps> = ({
   };
 
   const getScoreColor = (score: number) => {
-    if (score < 40) return 'text-rose-600';
-    if (score < 70) return 'text-amber-600';
-    if (score < 85) return 'text-blue-600';
-    return 'text-emerald-600';
+    if (score < 40) return 'text-violet-400';
+    if (score < 70) return 'text-amber-400';
+    if (score < 85) return 'text-indigo-400';
+    return 'text-emerald-400';
   };
 
   const topicProblems = problems.filter((p) => p.topic === selectedTopic);
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
+    <div className="space-y-6 animate-in fade-in duration-200 text-white">
       {/* Header Banner */}
-      <div className="card-soft p-6 bg-gradient-to-br from-white via-slate-50 to-rose-50/20 border-b border-slate-100">
+      <div className="card-soft p-6 bg-[#101229]/80 border border-violet-500/20">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center space-x-2 mb-1">
-              <span className="p-1.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-glow-coral">
+              <span className="p-1.5 rounded-xl gradient-violet text-white shadow-glow-violet">
                 <BrainCircuit size={18} />
               </span>
-              <h2 className="text-xl font-extrabold text-slate-800 tracking-tight">
+              <h2 className="text-xl font-extrabold text-white tracking-tight">
                 Weakness Intelligence Map
               </h2>
             </div>
-            <p className="text-xs text-slate-500 max-w-2xl leading-relaxed">
-              Real algorithmic intuition cannot be claimed merely by marking questions complete.
-              AlgoPulse evaluates hint dependencies, repeat attempts, revision failures, and independent solving velocity to surface your true operational weaknesses.
+            <p className="text-xs text-slate-400 max-w-2xl leading-relaxed">
+              Algorithmic intuition evaluated across hint dependencies, repeat attempts, revision recall, and independent velocity to surface genuine operational gaps.
             </p>
           </div>
 
           <div className="flex items-center space-x-3 flex-shrink-0">
-            <div className="px-3.5 py-2 rounded-xl bg-rose-50 border border-rose-200 text-center">
-              <span className="block text-xs font-bold text-rose-700">
+            <div className="px-3.5 py-2 rounded-xl bg-violet-950/70 border border-violet-500/30 text-center">
+              <span className="block text-xs font-bold text-violet-300">
                 {weakestTopics.length} Focus Area{weakestTopics.length !== 1 ? 's' : ''}
               </span>
-              <span className="text-[10px] text-rose-500 font-medium">Require Reinforcement</span>
+              <span className="text-[10px] text-violet-400 font-medium">Require Reinforcement</span>
             </div>
-            <div className="px-3.5 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-center">
-              <span className="block text-xs font-bold text-emerald-700">
+            <div className="px-3.5 py-2 rounded-xl bg-emerald-950/70 border border-emerald-500/30 text-center">
+              <span className="block text-xs font-bold text-emerald-300">
                 {topicMasteryMap.filter((t) => t.status === 'Proficient' || t.status === 'Mastered').length} Solid
               </span>
-              <span className="text-[10px] text-emerald-500 font-medium">Interview Ready</span>
+              <span className="text-[10px] text-emerald-400 font-medium">Mission Ready</span>
             </div>
           </div>
         </div>
 
         {/* Search & Filter Toolbar */}
-        <div className="mt-5 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+        <div className="mt-5 pt-4 border-t border-violet-900/30 flex flex-wrap items-center justify-between gap-3">
           <div className="relative max-w-xs w-full">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
@@ -138,20 +137,20 @@ export const WeaknessMapView: React.FC<WeaknessMapViewProps> = ({
               placeholder="Search topic or category..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+              className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#0b0c1e] text-white border border-violet-500/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500/30 placeholder:text-slate-500"
             />
           </div>
 
-          <div className="flex items-center space-x-2">
-            <span className="text-xs text-slate-400 font-medium">Filter by Status:</span>
+          <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+            <span className="text-xs text-slate-400 font-medium">Filter:</span>
             {['All', 'Critical Weakness', 'Needs Practice', 'Developing', 'Proficient', 'Mastered'].map((st) => (
               <button
                 key={st}
                 onClick={() => setFilterStatus(st)}
                 className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-colors ${
                   filterStatus === st
-                    ? 'bg-slate-800 text-white'
-                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                    ? 'bg-violet-600 text-white shadow-sm'
+                    : 'bg-[#0b0c1e] text-slate-400 border border-violet-500/20 hover:text-white'
                 }`}
               >
                 {st}
@@ -174,12 +173,12 @@ export const WeaknessMapView: React.FC<WeaknessMapViewProps> = ({
                   onClick={() => setSelectedTopic(item.topic)}
                   className={`p-4 rounded-2xl border transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-white border-rose-500 shadow-md ring-2 ring-rose-500/20'
-                      : 'bg-white/80 hover:bg-white border-slate-200/90 hover:border-slate-300 shadow-xs'
+                      ? 'bg-[#151735] border-violet-500 shadow-glow-violet ring-2 ring-violet-500/30'
+                      : 'bg-[#101229]/80 hover:bg-[#151735] border-violet-500/20'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <h4 className="font-extrabold text-slate-800 text-sm truncate">
+                    <h4 className="font-extrabold text-white text-sm truncate">
                       {item.topic}
                     </h4>
                     {getStatusBadge(item.status)}
@@ -193,88 +192,57 @@ export const WeaknessMapView: React.FC<WeaknessMapViewProps> = ({
                         {item.masteryScore}%
                       </span>
                     </div>
-                    <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
+                    <div className="w-full h-2 rounded-full bg-violet-950/60 overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${
                           item.masteryScore < 40
-                            ? 'bg-rose-500'
+                            ? 'bg-violet-500'
                             : item.masteryScore < 70
                             ? 'bg-amber-500'
-                            : item.masteryScore < 85
-                            ? 'bg-blue-500'
                             : 'bg-emerald-500'
                         }`}
-                        style={{ width: `${Math.max(5, item.masteryScore)}%` }}
+                        style={{ width: `${item.masteryScore}%` }}
                       />
                     </div>
                   </div>
 
-                  {/* Data Explanation Behind Weakness */}
-                  <p className="text-[11px] text-slate-500 leading-snug line-clamp-2">
-                    {item.explanation}
-                  </p>
-
-                  <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
-                    <span>{item.solvedCount} of {item.totalProblems} solved</span>
-                    <span>{item.independentCount} independent</span>
+                  {/* Summary bullets */}
+                  <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-violet-900/30">
+                    <span>{item.solvedCount} / {item.totalProblems} Solved</span>
+                    <span>{item.independentCount} Solo</span>
                   </div>
                 </div>
               );
             })}
           </div>
 
-          {/* Recommended Practice Queue from Weaknesses */}
+          {/* Recommended Revision Drill Row */}
           {recommendedRevisionProblems.length > 0 && (
-            <div className="card-soft p-5 bg-gradient-to-r from-rose-50/40 via-white to-amber-50/30 border border-rose-100">
-              <div className="flex items-center space-x-2 mb-2">
-                <Target size={16} className="text-rose-600" />
-                <h3 className="text-sm font-extrabold text-slate-800">
-                  Targeted Reinforcement Queue (Recommended Next Actions)
+            <div className="card-soft p-5 bg-[#101229]/80 border border-violet-500/20">
+              <div className="flex items-center space-x-2 mb-3">
+                <Target size={16} className="text-violet-400" />
+                <h3 className="font-extrabold text-white text-sm">
+                  Recommended Weakness Re-Drill Questions
                 </h3>
               </div>
-              <p className="text-xs text-slate-500 mb-3.5 leading-relaxed">
-                Problems selected specifically where you required hints or failed revisions in your weakest categories:
-              </p>
-
-              <div className="divide-y divide-slate-100 bg-white rounded-xl border border-slate-200/80 overflow-hidden">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {recommendedRevisionProblems.map((prob) => (
                   <div
                     key={prob.id}
-                    className="p-3.5 flex items-center justify-between hover:bg-slate-50/60 transition-colors gap-3"
+                    className="p-3 rounded-xl bg-[#0b0c1e] border border-violet-500/20 flex items-center justify-between gap-2"
                   >
                     <div className="min-w-0">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-bold text-xs text-slate-800 truncate">
-                          {prob.title}
-                        </span>
-                        <DifficultyBadge difficulty={prob.difficulty} />
-                      </div>
-                      <div className="flex items-center space-x-2 text-[10px] text-slate-400 mt-0.5">
-                        <span>{prob.topic}</span>
-                        {prob.hintsUsed && prob.hintsUsed > 0 ? (
-                          <>
-                            <span>•</span>
-                            <span className="text-rose-600 font-semibold">{prob.hintsUsed} hint(s) used</span>
-                          </>
-                        ) : null}
-                        {prob.mistakes && (
-                          <>
-                            <span>•</span>
-                            <span className="text-amber-600 truncate max-w-xs">{prob.mistakes}</span>
-                          </>
-                        )}
-                      </div>
+                      <span className="font-bold text-xs text-white truncate block">
+                        {prob.title}
+                      </span>
+                      <span className="text-[10px] text-violet-400">{prob.topic}</span>
                     </div>
-
                     <button
-                      onClick={() => {
-                        startFocusSession(prob);
-                        if (onStartFocusProblem) onStartFocusProblem(prob);
-                      }}
-                      className="px-3 py-1.5 rounded-lg text-xs font-bold text-white gradient-coral shadow-glow-coral flex items-center space-x-1 flex-shrink-0 active:scale-95 transition-all"
+                      onClick={() => startFocusSession(prob)}
+                      className="px-2.5 py-1 text-[11px] font-bold text-white gradient-violet rounded-lg shadow-sm flex items-center space-x-1"
                     >
-                      <span>Focus Mode</span>
-                      <ArrowRight size={12} />
+                      <span>Drill</span>
+                      <ArrowRight size={11} />
                     </button>
                   </div>
                 ))}
@@ -285,9 +253,9 @@ export const WeaknessMapView: React.FC<WeaknessMapViewProps> = ({
 
         {/* Right Col: Deep Dive Telemetry for Selected Topic */}
         <div className="space-y-6">
-          <div className="card-soft p-5 bg-white border border-slate-200">
-            <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
-              <h3 className="font-extrabold text-slate-800 text-sm">
+          <div className="card-soft p-5 bg-[#101229]/80 border border-violet-500/20">
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-violet-900/30">
+              <h3 className="font-extrabold text-white text-sm">
                 Topic Autopsy: {activeTopicStats.topic}
               </h3>
               {getStatusBadge(activeTopicStats.status)}
@@ -295,61 +263,61 @@ export const WeaknessMapView: React.FC<WeaknessMapViewProps> = ({
 
             {/* Core Metrics Grid */}
             <div className="grid grid-cols-2 gap-2.5 mb-4">
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                <span className="block text-[10px] text-slate-400 font-medium">Independent Solve Rate</span>
-                <span className="text-base font-extrabold text-slate-800">
+              <div className="p-3 rounded-xl bg-[#0b0c1e] border border-violet-500/20">
+                <span className="block text-[10px] text-slate-400 font-medium">Solo Solve Rate</span>
+                <span className="text-base font-extrabold text-white">
                   {activeTopicStats.solvedCount > 0
                     ? Math.round((activeTopicStats.independentCount / activeTopicStats.solvedCount) * 100)
                     : 0}%
                 </span>
-                <span className="block text-[10px] text-slate-500 mt-0.5">
+                <span className="block text-[10px] text-slate-400 mt-0.5">
                   {activeTopicStats.independentCount} of {activeTopicStats.solvedCount} solved
                 </span>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+              <div className="p-3 rounded-xl bg-[#0b0c1e] border border-violet-500/20">
                 <span className="block text-[10px] text-slate-400 font-medium">Hint Dependency</span>
-                <span className={`text-base font-extrabold ${activeTopicStats.hintsCount > 0 ? 'text-rose-600' : 'text-slate-800'}`}>
+                <span className={`text-base font-extrabold ${activeTopicStats.hintsCount > 0 ? 'text-violet-400' : 'text-white'}`}>
                   {activeTopicStats.solvedCount > 0
                     ? Math.round((activeTopicStats.hintsCount / activeTopicStats.solvedCount) * 100)
                     : 0}%
                 </span>
-                <span className="block text-[10px] text-slate-500 mt-0.5">
+                <span className="block text-[10px] text-slate-400 mt-0.5">
                   {activeTopicStats.hintsCount} required hints
                 </span>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+              <div className="p-3 rounded-xl bg-[#0b0c1e] border border-violet-500/20">
                 <span className="block text-[10px] text-slate-400 font-medium">Avg Solve Attempts</span>
-                <span className="text-base font-extrabold text-slate-800">
+                <span className="text-base font-extrabold text-white">
                   {activeTopicStats.avgAttempts}x
                 </span>
-                <span className="block text-[10px] text-slate-500 mt-0.5">
+                <span className="block text-[10px] text-slate-400 mt-0.5">
                   Total {activeTopicStats.attemptsTotal} attempts
                 </span>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+              <div className="p-3 rounded-xl bg-[#0b0c1e] border border-violet-500/20">
                 <span className="block text-[10px] text-slate-400 font-medium">Revision Failures</span>
-                <span className={`text-base font-extrabold ${activeTopicStats.revisionFails > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                <span className={`text-base font-extrabold ${activeTopicStats.revisionFails > 0 ? 'text-violet-400' : 'text-emerald-400'}`}>
                   {activeTopicStats.revisionFails}
                 </span>
-                <span className="block text-[10px] text-slate-500 mt-0.5">
+                <span className="block text-[10px] text-slate-400 mt-0.5">
                   {activeTopicStats.revisionFails === 0 ? 'Flawless recall' : 'Failed intervals'}
                 </span>
               </div>
             </div>
 
             {/* Explanation card */}
-            <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/80 mb-4 text-xs text-amber-900 leading-relaxed">
-              <span className="font-bold block mb-1">Diagnostic Assessment:</span>
+            <div className="p-3.5 rounded-xl bg-[#0b0c1e] border border-violet-500/30 mb-4 text-xs text-violet-200 leading-relaxed">
+              <span className="font-bold block mb-1 text-violet-300">Diagnostic Assessment:</span>
               {activeTopicStats.explanation}
             </div>
 
             {/* Subtopic breakdown */}
             <div>
-              <h4 className="text-xs font-bold text-slate-700 mb-2 flex items-center space-x-1.5">
-                <Layers size={13} className="text-slate-500" />
+              <h4 className="text-xs font-bold text-slate-300 mb-2 flex items-center space-x-1.5">
+                <Layers size={13} className="text-violet-400" />
                 <span>Subtopic Mastery Breakdown</span>
               </h4>
 
@@ -359,26 +327,15 @@ export const WeaknessMapView: React.FC<WeaknessMapViewProps> = ({
                 </div>
               ) : (
                 <div className="space-y-1.5">
-                  {activeTopicStats.subtopics.map((sub) => (
+                  {activeTopicStats.subtopics.map((sub, i) => (
                     <div
-                      key={sub.name}
-                      className="p-2 rounded-lg bg-slate-50 flex items-center justify-between text-xs"
+                      key={i}
+                      className="p-2 rounded-lg bg-[#0b0c1e] border border-violet-500/20 flex items-center justify-between text-xs"
                     >
-                      <span className="font-semibold text-slate-700 truncate">{sub.name}</span>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-[11px] text-slate-500">
-                          {sub.solved}/{sub.total}
-                        </span>
-                        {sub.needsHelp ? (
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-rose-100 text-rose-700">
-                            Needs Help
-                          </span>
-                        ) : (
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-700">
-                            Solid
-                          </span>
-                        )}
-                      </div>
+                      <span className="text-slate-200 font-medium truncate">{sub.name}</span>
+                      <span className="text-[11px] font-bold text-violet-400">
+                        {sub.solved} / {sub.total}
+                      </span>
                     </div>
                   ))}
                 </div>

@@ -35,9 +35,9 @@ export const TimerRing: React.FC<TimerRingProps> = ({
       <svg width={size} height={size} className="transform -rotate-90">
         <defs>
           <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#f43f5e" />
-            <stop offset="60%" stopColor="#ec4899" />
-            <stop offset="100%" stopColor="#8b5cf6" />
+            <stop offset="0%" stopColor="#7c3aed" />
+            <stop offset="50%" stopColor="#8b5cf6" />
+            <stop offset="100%" stopColor="#6366f1" />
           </linearGradient>
           <linearGradient id="completedGradient" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#10b981" />
@@ -52,7 +52,7 @@ export const TimerRing: React.FC<TimerRingProps> = ({
           r={radius}
           stroke="currentColor"
           strokeWidth={strokeWidth}
-          className="text-slate-100"
+          className="text-violet-950/40"
           fill="transparent"
         />
 
@@ -77,17 +77,17 @@ export const TimerRing: React.FC<TimerRingProps> = ({
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
         {isCompleted ? (
           <div className="flex flex-col items-center animate-bounce">
-            <span className="text-2xl">🎉</span>
-            <span className="text-lg font-bold text-emerald-600 mt-1">Done!</span>
-            <span className="text-[11px] text-emerald-500 font-medium">30m logged</span>
+            <span className="text-2xl">🚀</span>
+            <span className="text-lg font-bold text-emerald-400 mt-1">Conquered!</span>
+            <span className="text-[11px] text-emerald-400 font-medium">30m logged</span>
           </div>
         ) : (
           <>
-            <span className="text-3xl font-extrabold text-slate-800 tracking-tight font-mono">
+            <span className="text-3xl font-extrabold text-white tracking-tight font-mono">
               {formattedTime}
             </span>
-            <span className="text-xs font-semibold text-slate-400 mt-1 uppercase tracking-wider">
-              {isRunning ? 'Focusing...' : remainingSeconds < totalSeconds ? 'Paused' : 'Ready'}
+            <span className="text-xs font-semibold text-violet-400 mt-1 uppercase tracking-wider">
+              {isRunning ? 'Engaged' : remainingSeconds < totalSeconds ? 'Paused' : 'Standby'}
             </span>
           </>
         )}

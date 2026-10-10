@@ -10,8 +10,8 @@
 
   body {
     font-family: var(--font-sans);
-    background-color: #f8fafc;
-    color: #1e293b;
+    background-color: #090a16;
+    color: #f1f5f9;
     overflow-x: hidden;
   }
 
@@ -20,57 +20,69 @@
   }
 }
 
-/* Custom scrollbars */
+/* Cosmic custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #090a16;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #25284c;
   border-radius: 9999px;
+  border: 1px solid rgba(139, 92, 246, 0.15);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #7c3aed;
 }
 
-/* Glassmorphism & Soft Cards */
+/* Glassmorphism Space Astronaut Cards */
 .card-soft {
-  background: #ffffff;
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+  background: rgba(15, 17, 38, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(139, 92, 246, 0.18);
+  box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.5), 0 2px 8px -1px rgba(139, 92, 246, 0.08);
   border-radius: 1.25rem;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .card-soft-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.07), 0 4px 10px -2px rgba(0, 0, 0, 0.03);
+  border-color: rgba(167, 139, 250, 0.35);
+  box-shadow: 0 12px 36px -4px rgba(0, 0, 0, 0.65), 0 0 24px -2px rgba(139, 92, 246, 0.25);
 }
 
-/* Coral Pink Gradient for Key Cards */
-.gradient-coral {
-  background: linear-gradient(135deg, #f43f5e 0%, #ec4899 50%, #f472b6 100%);
+/* Glassy Violet Space Astronaut Gradients */
+.gradient-coral,
+.gradient-violet,
+.gradient-cosmic {
+  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 50%, #8b5cf6 100%);
 }
 
+.gradient-space,
 .gradient-dark {
-  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  background: linear-gradient(180deg, #0d0f26 0%, #080914 100%);
 }
 
 .gradient-purple-subtle {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
+  background: linear-gradient(135deg, #4c1d95 0%, #6d28d9 50%, #7c3aed 100%);
 }
 
 .gradient-amber-subtle {
-  background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
 }
 
-/* Pulse animation */
+.shadow-glow-coral,
+.shadow-glow-violet {
+  box-shadow: 0 0 25px -2px rgba(139, 92, 246, 0.45);
+}
+
+/* Micro-animations */
 @keyframes soft-pulse {
   0%, 100% {
     transform: scale(1);
@@ -84,4 +96,17 @@
 
 .animate-soft-pulse {
   animation: soft-pulse 3s infinite ease-in-out;
+}
+
+@keyframes orbit-float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-orbit-float {
+  animation: orbit-float 4s ease-in-out infinite;
 }

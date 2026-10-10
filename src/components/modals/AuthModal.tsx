@@ -54,7 +54,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           setSuccessMessage(
             data.session
               ? 'Account created and signed in successfully!'
-              : 'Account created! Please check your email inbox to confirm your account.'
+              : 'Account registered! Please check your email to confirm.'
           );
           addNotification('Welcome to AlgoPulse Cloud', 'Account registered successfully.', 'success');
         }
@@ -67,7 +67,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         if (error) {
           setErrorMessage(error.message);
         } else {
-          setSuccessMessage('Signed in successfully! Syncing your data...');
+          setSuccessMessage('Signed in successfully! Replicating orbital telemetry...');
           addNotification('Cloud Connected', 'Signed in and synced with Supabase.', 'success');
           setTimeout(() => onClose(), 1000);
         }
@@ -106,26 +106,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 overflow-hidden relative max-h-[92vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#04040a]/80 backdrop-blur-md animate-fade-in">
+      <div className="bg-[#0f1128] rounded-3xl max-w-md w-full p-6 border border-violet-500/30 shadow-glow-violet/30 overflow-hidden relative max-h-[92vh] flex flex-col text-slate-200">
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+        <div className="flex items-center justify-between pb-4 border-b border-violet-500/10 flex-shrink-0">
           <div className="flex items-center space-x-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-500 to-rose-500 text-white flex items-center justify-center shadow-md">
+            <div className="w-10 h-10 rounded-2xl gradient-violet text-white flex items-center justify-center shadow-glow-violet">
               <Cloud size={20} />
             </div>
             <div>
-              <h3 className="font-extrabold text-slate-800 text-lg">
-                Supabase Cloud Sync
+              <h3 className="font-extrabold text-white text-lg">
+                Supabase Cloud Command
               </h3>
               <p className="text-xs text-slate-400">
-                Multi-device persistence & secure auth
+                Multi-device persistence & encrypted auth
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-violet-500/10 transition-colors"
           >
             <X size={18} />
           </button>
@@ -136,65 +136,65 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           {/* If Supabase is not configured yet */}
           {!isSupabaseConfigured ? (
             <div className="space-y-4">
-              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200/80 text-xs text-amber-900 space-y-2">
-                <div className="flex items-center space-x-1.5 font-bold text-amber-800">
-                  <AlertCircle size={15} />
+              <div className="p-4 rounded-2xl bg-violet-950/30 border border-violet-500/30 text-xs text-violet-300 space-y-2">
+                <div className="flex items-center space-x-1.5 font-bold text-white">
+                  <AlertCircle size={15} className="text-violet-400" />
                   <span>Cloud Backend Setup Needed</span>
                 </div>
                 <p className="leading-relaxed">
                   The application is currently running in <strong>Local Storage Mode</strong>. All problems, timers, and notes are preserved in this browser.
                 </p>
                 <p className="leading-relaxed">
-                  To sync across your phone, tablet, and other computers:
+                  To sync across multiple computers or mobile devices:
                 </p>
-                <ol className="list-decimal pl-4 space-y-1 font-mono text-[11px] text-amber-950">
+                <ol className="list-decimal pl-4 space-y-1 font-mono text-[11px] text-violet-200">
                   <li>Create a free project at supabase.com</li>
-                  <li>Run the schema from <code className="font-bold">supabase/schema.sql</code></li>
-                  <li>Add <code className="font-bold">VITE_SUPABASE_URL</code> & <code className="font-bold">VITE_SUPABASE_ANON_KEY</code> in Vercel or <code className="font-bold">.env.local</code></li>
+                  <li>Run the schema from <code className="font-bold text-white">supabase/schema.sql</code></li>
+                  <li>Add <code className="font-bold text-white">VITE_SUPABASE_URL</code> & <code className="font-bold text-white">VITE_SUPABASE_ANON_KEY</code></li>
                 </ol>
               </div>
 
-              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-600">
-                <p className="font-semibold text-slate-700 mb-1">Row-Level Security (RLS) Ready</p>
-                <p className="text-[11px] text-slate-500">
-                  The SQL schema includes strict RLS policies to isolate your questions and ensure only your authenticated account can read or write your records.
+              <div className="p-3 bg-[#080918] rounded-2xl border border-violet-500/20 text-xs text-slate-400">
+                <p className="font-semibold text-white mb-1">Row-Level Security (RLS) Ready</p>
+                <p className="text-[11px] text-slate-400">
+                  Strict RLS policies ensure each pilot can only access their authenticated telemetry records.
                 </p>
               </div>
             </div>
           ) : currentUser ? (
             /* User is already logged in */
             <div className="space-y-4">
-              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200/80 text-xs text-emerald-900 flex items-center space-x-3">
-                <UserCheck size={24} className="text-emerald-600 flex-shrink-0" />
+              <div className="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 text-xs text-emerald-300 flex items-center space-x-3">
+                <UserCheck size={24} className="text-emerald-400 flex-shrink-0" />
                 <div className="min-w-0">
-                  <p className="font-bold text-emerald-800">Cloud Sync Active</p>
-                  <p className="text-emerald-700 truncate font-mono text-[11px]">
+                  <p className="font-bold text-emerald-200">Cloud Sync Active</p>
+                  <p className="text-emerald-300 truncate font-mono text-[11px]">
                     {currentUser.email}
                   </p>
                 </div>
               </div>
 
               {/* Sync local data button */}
-              <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80">
-                <h4 className="font-bold text-xs text-slate-800 mb-1 flex items-center">
-                  <UploadCloud size={14} className="mr-1.5 text-purple-600" />
-                  Sync Local Data to Cloud
+              <div className="p-3.5 bg-[#080918] rounded-2xl border border-violet-500/20">
+                <h4 className="font-bold text-xs text-white mb-1 flex items-center">
+                  <UploadCloud size={14} className="mr-1.5 text-violet-400" />
+                  Replicate Local Telemetry to Cloud
                 </h4>
-                <p className="text-[11px] text-slate-500 mb-3">
-                  Upload all current questions, study logs, and settings from this browser to your Supabase cloud account.
+                <p className="text-[11px] text-slate-400 mb-3">
+                  Upload all current problems, study logs, and settings from this browser to your cloud account.
                 </p>
                 <button
                   onClick={handleSyncLocalToCloud}
                   disabled={syncingData}
-                  className="w-full py-2 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center space-x-1.5"
+                  className="w-full py-2 px-3 rounded-xl gradient-violet hover:opacity-95 disabled:opacity-50 text-white text-xs font-bold transition-all shadow-glow-violet flex items-center justify-center space-x-1.5"
                 >
                   <Database size={13} />
-                  <span>{syncingData ? 'Uploading...' : 'Upload & Sync Local Data'}</span>
+                  <span>{syncingData ? 'Uploading...' : 'Upload & Replicate Telemetry'}</span>
                 </button>
               </div>
 
               {successMessage && (
-                <div className="p-3 bg-emerald-50 rounded-xl text-xs text-emerald-700 flex items-center space-x-1.5">
+                <div className="p-3 bg-emerald-950/40 border border-emerald-500/40 rounded-xl text-xs text-emerald-300 flex items-center space-x-1.5">
                   <CheckCircle2 size={14} />
                   <span>{successMessage}</span>
                 </div>
@@ -203,7 +203,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               <button
                 onClick={handleSignOut}
                 disabled={loading}
-                className="w-full py-2.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-bold transition-all flex items-center justify-center space-x-1.5"
+                className="w-full py-2.5 rounded-xl border border-rose-500/30 text-rose-300 bg-rose-950/20 hover:bg-rose-900/40 text-xs font-bold transition-all flex items-center justify-center space-x-1.5"
               >
                 <LogOut size={14} />
                 <span>Sign Out (Switch to Local Mode)</span>
@@ -212,12 +212,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           ) : (
             /* User needs to sign in or sign up */
             <form onSubmit={handleSubmit} className="space-y-3.5">
-              <div className="flex rounded-xl bg-slate-100 p-1 text-xs font-bold">
+              <div className="flex rounded-xl bg-[#080918] p-1 text-xs font-bold border border-violet-500/20">
                 <button
                   type="button"
                   onClick={() => setMode('signin')}
                   className={`flex-1 py-1.5 rounded-lg transition-all ${
-                    mode === 'signin' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
+                    mode === 'signin' ? 'bg-violet-600 text-white shadow-glow-violet/30' : 'text-slate-400 hover:text-white'
                   }`}
                 >
                   Sign In
@@ -226,7 +226,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   type="button"
                   onClick={() => setMode('signup')}
                   className={`flex-1 py-1.5 rounded-lg transition-all ${
-                    mode === 'signup' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
+                    mode === 'signup' ? 'bg-violet-600 text-white shadow-glow-violet/30' : 'text-slate-400 hover:text-white'
                   }`}
                 >
                   Create Account
@@ -234,42 +234,42 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               </div>
 
               {errorMessage && (
-                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 flex items-start space-x-2">
+                <div className="p-3 bg-rose-950/30 border border-rose-500/40 rounded-xl text-xs text-rose-300 flex items-start space-x-2">
                   <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
                   <span>{errorMessage}</span>
                 </div>
               )}
 
               {successMessage && (
-                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-700 flex items-start space-x-2">
+                <div className="p-3 bg-emerald-950/40 border border-emerald-500/40 rounded-xl text-xs text-emerald-300 flex items-start space-x-2">
                   <CheckCircle2 size={14} className="mt-0.5 flex-shrink-0" />
                   <span>{successMessage}</span>
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-300 mb-1">
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your-email@example.com"
-                    className="w-full text-xs pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                    placeholder="pilot@station.space"
+                    className="w-full text-xs pl-8 pr-3 py-2 bg-[#080918] border border-violet-500/20 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-violet-400"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Password
+                <label className="block text-xs font-bold text-slate-300 mb-1">
+                  Security Passphrase
                 </label>
                 <div className="relative">
-                  <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                   <input
                     type="password"
                     required
@@ -277,7 +277,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full text-xs pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                    className="w-full text-xs pl-8 pr-3 py-2 bg-[#080918] border border-violet-500/20 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-violet-400"
                   />
                 </div>
               </div>
@@ -285,9 +285,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 rounded-xl text-xs font-bold text-white gradient-coral shadow-glow-coral flex items-center justify-center space-x-1.5 active:scale-95 transition-all mt-2"
+                className="w-full py-2.5 rounded-xl text-xs font-bold text-white gradient-violet shadow-glow-violet flex items-center justify-center space-x-1.5 active:scale-95 transition-all mt-2 hover:opacity-95"
               >
-                <span>{loading ? 'Processing...' : mode === 'signin' ? 'Sign In' : 'Create Account'}</span>
+                <span>{loading ? 'Processing...' : mode === 'signin' ? 'Sign In to Station' : 'Create Flight Account'}</span>
                 <ArrowRight size={14} />
               </button>
             </form>
@@ -295,11 +295,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Footer */}
-        <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-          <span>Row-Level Security protects your personal records.</span>
+        <div className="pt-3 border-t border-violet-500/10 flex items-center justify-between text-[11px] text-slate-400">
+          <span>Row-Level Security isolates your personal space records.</span>
           <button
             onClick={onClose}
-            className="font-bold text-slate-600 hover:underline"
+            className="font-bold text-violet-400 hover:text-white"
           >
             Close
           </button>

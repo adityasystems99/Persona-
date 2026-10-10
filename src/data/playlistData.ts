@@ -1,6 +1,8 @@
 import { Playlist } from '../types/dsa';
 
-export const INITIAL_PLAYLISTS: Playlist[] = [
+export const INITIAL_PLAYLISTS: Playlist[] = [];
+
+export const SAMPLE_PLAYLISTS_PACK: Playlist[] = [
   // 1. DSA Topicwise Prep
   {
     id: 'pl-dsa-arrays',

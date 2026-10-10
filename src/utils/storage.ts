@@ -44,7 +44,14 @@ const STORAGE_KEYS = {
 export const loadStoredProblems = (): Problem[] => {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.PROBLEMS);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed: Problem[] = JSON.parse(raw);
+      const staleMockIds = new Set([
+        'prob-1', 'prob-2', 'prob-3', 'prob-4', 'prob-5', 'prob-6', 'prob-7', 'prob-8', 'prob-9',
+        'sample-1', 'sample-2', 'sample-3'
+      ]);
+      return parsed.filter((p) => !staleMockIds.has(p.id));
+    }
   } catch (e) {
     console.error('Error loading problems from localStorage', e);
   }
@@ -165,7 +172,11 @@ export const saveStoredSettings = (settings: AccountabilitySettings): void => {
 export const loadStoredStudyLogs = (): StudyDayLog[] => {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.STUDY_LOGS);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed: StudyDayLog[] = JSON.parse(raw);
+      const staleDates = new Set(['2026-10-03', '2026-10-04', '2026-10-05', '2026-10-06', '2026-10-07', '2026-10-08']);
+      return parsed.filter((l) => !staleDates.has(l.date));
+    }
   } catch (e) {
     console.error('Error loading study logs', e);
   }
@@ -190,8 +201,8 @@ export const loadStoredNotifications = (): AppNotification[] => {
   return [
     {
       id: 'notif-welcome',
-      title: 'Welcome to AlgoPulse',
-      message: 'Your personal DSA command center is ready. Start your 30-min STL session or begin today\'s problem set.',
+      title: 'Cosmic Command Online',
+      message: 'Workspace active. Add your first DSA problem to begin mission telemetry.',
       timestamp: new Date().toISOString(),
       type: 'info',
       read: false,
@@ -299,7 +310,20 @@ export const saveStoredActiveFocus = (state: ActiveFocusState | null): void => {
 export const loadStoredMilestones = (): Milestone[] => {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.MILESTONES);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed: Milestone[] = JSON.parse(raw);
+      return INITIAL_MILESTONES.map((init) => {
+        const stored = parsed.find((p) => p.id === init.id);
+        if (!stored) return init;
+        const validProgress = typeof stored.currentValue === 'number' ? stored.currentValue : 0;
+        return {
+          ...init,
+          currentValue: validProgress,
+          isUnlocked: validProgress >= init.targetValue && Boolean(stored.isUnlocked),
+          unlockedAt: validProgress >= init.targetValue ? stored.unlockedAt : undefined,
+        };
+      });
+    }
   } catch (e) {
     console.error('Error loading milestones', e);
   }
@@ -337,7 +361,10 @@ export const saveStoredRescheduleEvents = (events: RescheduleEvent[]): void => {
 export const loadStoredPlaylists = (): Playlist[] => {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.PLAYLISTS);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed: Playlist[] = JSON.parse(raw);
+      return parsed.filter((p) => p.id !== 'pl-dsa-arrays' && !p.id.startsWith('pl-dsa-sample'));
+    }
   } catch (e) {
     console.error('Error loading playlists', e);
   }

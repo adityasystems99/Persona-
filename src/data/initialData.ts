@@ -22,9 +22,39 @@ export const DEFAULT_SETTINGS: AccountabilitySettings = {
   dailyTargetHard: 1,
 };
 
-export const INITIAL_PROBLEMS: Problem[] = [
+// 100% Live Default: Clean slate so everything reflects what the user actually adds!
+export const INITIAL_PROBLEMS: Problem[] = [];
+
+export const INITIAL_STL_STATE: STLPracticeState = {
+  date: getTodayDateString(),
+  totalSeconds: 1800, // 30 minutes
+  remainingSeconds: 1800,
+  isRunning: false,
+  isCompleted: false,
+  currentTopicId: 'vectors',
+  notes: '',
+  codeSnippet: `// Space Cadet C++ STL Arena
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+int main() {
+    // Write your STL logic here
+    vector<int> v;
+    v.reserve(100);
+    return 0;
+}`,
+};
+
+// 100% Live Default: Empty past study logs
+export const INITIAL_PAST_LOGS: StudyDayLog[] = [];
+
+// Optional sample pack if the user manually clicks "Reset to Sample Data" in Settings
+export const SAMPLE_PROBLEMS_PACK: Problem[] = [
   {
-    id: 'prob-1',
+    id: 'sample-1',
     title: 'Two Sum',
     topic: 'Arrays & Hashing',
     subtopic: 'Hash Map Lookup',
@@ -47,7 +77,7 @@ export const INITIAL_PROBLEMS: Problem[] = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: 'prob-2',
+    id: 'sample-2',
     title: 'Valid Palindrome',
     topic: 'Two Pointers',
     subtopic: 'String Verification',
@@ -70,7 +100,7 @@ export const INITIAL_PROBLEMS: Problem[] = [
     updatedAt: new Date().toISOString(),
   },
   {
-    id: 'prob-3',
+    id: 'sample-3',
     title: 'Container With Most Water',
     topic: 'Two Pointers',
     subtopic: 'Greedy Area Maximization',
@@ -92,270 +122,20 @@ export const INITIAL_PROBLEMS: Problem[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
-  {
-    id: 'prob-4',
-    title: 'Longest Substring Without Repeating Characters',
-    topic: 'Sliding Window',
-    subtopic: 'Dynamic Window Range',
-    difficulty: 'Medium',
-    platform: 'LeetCode',
-    url: 'https://leetcode.com/problems/longest-substring-without-repeating-characters/',
-    status: 'Not Started',
-    timeSpentMinutes: 0,
-    notes: 'Use unordered_map or direct array index table of 128 chars to store last seen position of each character.',
-    approach: 'Sliding Window with last-seen character hash map',
-    timeComplexity: 'O(N)',
-    spaceComplexity: 'O(min(N, M))',
-    attempts: 0,
-    solvedIndependently: false,
-    inTodayPlan: true,
-    orderInPlan: 4,
-    needsRevision: false,
-    revisionHistory: [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'prob-5',
-    title: 'Trapping Rain Water',
-    topic: 'Two Pointers',
-    subtopic: 'Prefix & Suffix Extremes',
-    difficulty: 'Hard',
-    platform: 'LeetCode',
-    url: 'https://leetcode.com/problems/trapping-rain-water/',
-    status: 'Not Started',
-    timeSpentMinutes: 0,
-    notes: 'Maintain left_max and right_max. Whichever is smaller limits trapped water on that side.',
-    approach: 'Two pointers maintaining leftMax and rightMax',
-    timeComplexity: 'O(N)',
-    spaceComplexity: 'O(1)',
-    attempts: 0,
-    solvedIndependently: false,
-    inTodayPlan: true,
-    orderInPlan: 5,
-    needsRevision: false,
-    revisionHistory: [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'prob-6',
-    title: 'Coin Change',
-    topic: 'Dynamic Programming',
-    subtopic: 'Unbounded Knapsack',
-    difficulty: 'Medium',
-    platform: 'LeetCode',
-    url: 'https://leetcode.com/problems/coin-change/',
-    status: 'Solved with Hints',
-    timeSpentMinutes: 45,
-    notes: 'Got stuck on greedy approach (e.g. [1, 3, 4] for 6 fails with greedy 4+1+1=3 coins instead of 3+3=2). Used 1D DP table dp[i] = min(dp[i], dp[i-c] + 1).',
-    approach: 'Bottom-Up 1D DP with amount iteration',
-    timeComplexity: 'O(amount * n)',
-    spaceComplexity: 'O(amount)',
-    attempts: 3,
-    solvedIndependently: false,
-    inTodayPlan: false,
-    orderInPlan: 0,
-    needsRevision: true,
-    revisionScheduledDate: getTodayDateString(),
-    mistakes: 'Assumed greedy choice property holds. Greedy fails on arbitrary coin systems.',
-    patternLearned: 'Always verify if subproblems overlap and optimal substructure holds before attempting greedy.',
-    revisionHistory: [
-      {
-        id: 'rev-1',
-        date: '2026-10-07',
-        success: false,
-        notes: 'Needed reminder on bottom-up base initialization dp[0] = 0 and infinity filling.'
-      }
-    ],
-    createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'prob-7',
-    title: 'Word Ladder',
-    topic: 'Graphs',
-    subtopic: 'Breadth First Search',
-    difficulty: 'Hard',
-    platform: 'LeetCode',
-    url: 'https://leetcode.com/problems/word-ladder/',
-    status: 'Needs Revision',
-    timeSpentMinutes: 55,
-    notes: 'Shortest transformation sequence requires unweighted shortest path -> standard BFS. Bidirectional BFS reduces branch factor drastically.',
-    approach: 'BFS Level-by-level using unordered_set for word dictionary',
-    timeComplexity: 'O(M^2 * N)',
-    spaceComplexity: 'O(M * N)',
-    attempts: 3,
-    solvedIndependently: false,
-    inTodayPlan: false,
-    orderInPlan: 0,
-    needsRevision: true,
-    revisionScheduledDate: getTodayDateString(),
-    mistakes: 'Iterating through wordList instead of generating 26 * word_length mutated strings caused TLE.',
-    patternLearned: 'When alphabet size is small (26), generate transitions by character replacement rather than scanning every dictionary word.',
-    revisionHistory: [],
-    createdAt: new Date(Date.now() - 4 * 86400000).toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'prob-8',
-    title: 'Merge Two Sorted Lists',
-    topic: 'Linked List',
-    subtopic: 'Two Pointer Splice',
-    difficulty: 'Easy',
-    platform: 'LeetCode',
-    url: 'https://leetcode.com/problems/merge-two-sorted-lists/',
-    status: 'Solved Independently',
-    timeSpentMinutes: 12,
-    notes: 'Dummy head node simplifies pointer splicing without edge case head checks.',
-    approach: 'Dummy head pointer + iterative comparison',
-    timeComplexity: 'O(N + M)',
-    spaceComplexity: 'O(1)',
-    attempts: 1,
-    solvedIndependently: true,
-    inTodayPlan: false,
-    orderInPlan: 0,
-    needsRevision: false,
-    revisionHistory: [],
-    createdAt: new Date(Date.now() - 5 * 86400000).toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'prob-9',
-    title: 'LRU Cache',
-    topic: 'Design & Data Structures',
-    subtopic: 'Doubly Linked List + Hash Map',
-    difficulty: 'Medium',
-    platform: 'LeetCode',
-    url: 'https://leetcode.com/problems/lru-cache/',
-    status: 'Solved with Hints',
-    timeSpentMinutes: 48,
-    notes: 'Required std::list and unordered_map iterator storing. Had off-by-one with capacity eviction.',
-    approach: 'Doubly Linked List for O(1) removals + Hash Map for O(1) node lookup',
-    timeComplexity: 'O(1) all ops',
-    spaceComplexity: 'O(Capacity)',
-    attempts: 2,
-    solvedIndependently: false,
-    inTodayPlan: false,
-    orderInPlan: 0,
-    needsRevision: true,
-    revisionScheduledDate: getTodayDateString(),
-    mistakes: 'Forgot to update existing key value when calling put() on an existing key.',
-    patternLearned: 'In LRU, updating existing key is both a value overwrite AND a touch that promotes to head.',
-    revisionHistory: [],
-    createdAt: new Date(Date.now() - 2 * 86400000).toISOString(),
-    updatedAt: new Date().toISOString(),
-  }
 ];
 
-export const INITIAL_STL_STATE: STLPracticeState = {
-  date: getTodayDateString(),
-  totalSeconds: 1800, // 30 minutes
-  remainingSeconds: 1800,
-  isRunning: false,
-  isCompleted: false,
-  currentTopicId: 'vectors',
-  notes: 'Focusing on memory reservation with reserve() vs resize() and custom comparator strict weak ordering.',
-  codeSnippet: `// 30-min STL Session Practice
-#include <iostream>
-#include <vector>
-#include <algorithm>
-
-using namespace std;
-
-int main() {
-    vector<int> v;
-    v.reserve(100); // Allocate capacity upfront
-    for(int i = 0; i < 10; ++i) {
-        v.push_back(i * 3);
-    }
-    // Binary search lower_bound
-    auto it = lower_bound(v.begin(), v.end(), 12);
-    if(it != v.end()) {
-        cout << "Found index: " << distance(v.begin(), it) << endl;
-    }
-    return 0;
-}`,
-};
-
-// Past 7 days realistic study logs so initial analytics look impressive and accurate
-export const INITIAL_PAST_LOGS: StudyDayLog[] = [
-  {
-    date: '2026-10-03',
-    solvedCount: 4,
-    easySolved: 2,
-    mediumSolved: 2,
-    hardSolved: 0,
-    independentCount: 3,
-    hintsCount: 1,
-    dsaMinutes: 110,
-    stlMinutes: 30,
-    stlCompleted: true,
-    targetMet: true,
-  },
-  {
-    date: '2026-10-04',
-    solvedCount: 3,
-    easySolved: 1,
-    mediumSolved: 2,
-    hardSolved: 0,
-    independentCount: 2,
-    hintsCount: 1,
-    dsaMinutes: 95,
-    stlMinutes: 30,
-    stlCompleted: true,
-    targetMet: true,
-  },
-  {
-    date: '2026-10-05',
-    solvedCount: 5,
-    easySolved: 2,
-    mediumSolved: 2,
-    hardSolved: 1,
-    independentCount: 4,
-    hintsCount: 1,
-    dsaMinutes: 160,
-    stlMinutes: 30,
-    stlCompleted: true,
-    targetMet: true,
-  },
-  {
-    date: '2026-10-06',
-    solvedCount: 3,
-    easySolved: 1,
-    mediumSolved: 1,
-    hardSolved: 1,
-    independentCount: 2,
-    hintsCount: 1,
-    dsaMinutes: 125,
-    stlMinutes: 30,
-    stlCompleted: true,
-    targetMet: true,
-  },
-  {
-    date: '2026-10-07',
-    solvedCount: 4,
-    easySolved: 2,
-    mediumSolved: 2,
-    hardSolved: 0,
-    independentCount: 3,
-    hintsCount: 1,
-    dsaMinutes: 105,
-    stlMinutes: 30,
-    stlCompleted: true,
-    targetMet: true,
-  },
+export const SAMPLE_PAST_LOGS: StudyDayLog[] = [
   {
     date: '2026-10-08',
-    solvedCount: 4,
+    solvedCount: 3,
     easySolved: 2,
     mediumSolved: 1,
-    hardSolved: 1,
-    independentCount: 3,
+    hardSolved: 0,
+    independentCount: 2,
     hintsCount: 1,
-    dsaMinutes: 140,
+    dsaMinutes: 75,
     stlMinutes: 30,
     stlCompleted: true,
     targetMet: true,
-  }
+  },
 ];

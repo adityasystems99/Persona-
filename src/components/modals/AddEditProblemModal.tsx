@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Code2, Link2, Sparkles, Clock, CheckCircle } from 'lucide-react';
+import { X, Code2, Link2, Clock, CheckCircle } from 'lucide-react';
 import { useDSA } from '../../context/DSAContext';
 import { Problem, Difficulty, Platform, ProblemStatus } from '../../types/dsa';
 
@@ -119,26 +119,26 @@ export const AddEditProblemModal: React.FC<AddEditProblemModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 overflow-hidden relative max-h-[92vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#04040a]/80 backdrop-blur-md animate-fade-in">
+      <div className="bg-[#0f1128] rounded-3xl max-w-xl w-full p-6 border border-violet-500/30 shadow-glow-violet/30 overflow-hidden relative max-h-[92vh] flex flex-col text-slate-200">
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-slate-100 flex-shrink-0">
+        <div className="flex items-center justify-between pb-4 border-b border-violet-500/10 flex-shrink-0">
           <div className="flex items-center space-x-2.5">
-            <div className="w-10 h-10 rounded-2xl gradient-coral text-white flex items-center justify-center shadow-glow-coral">
+            <div className="w-10 h-10 rounded-2xl gradient-violet text-white flex items-center justify-center shadow-glow-violet">
               <Code2 size={20} />
             </div>
             <div>
-              <h3 className="font-extrabold text-slate-800 text-lg">
-                {editingProblem ? 'Edit DSA Problem' : 'Add New Problem'}
+              <h3 className="font-extrabold text-white text-lg">
+                {editingProblem ? 'Edit Problem Telemetry' : 'Log New DSA Problem'}
               </h3>
               <p className="text-xs text-slate-400">
-                Log metadata, complexity, approach and daily assignment
+                Log algorithmic complexity, pattern notes, and daily orbit assignment
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-violet-500/10 transition-colors"
           >
             <X size={18} />
           </button>
@@ -148,8 +148,8 @@ export const AddEditProblemModal: React.FC<AddEditProblemModalProps> = ({
         <form onSubmit={handleSubmit} className="overflow-y-auto py-4 space-y-4 flex-1 pr-1">
           {/* Title */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              Problem Name <span className="text-rose-500">*</span>
+            <label className="block text-xs font-bold text-slate-300 mb-1">
+              Problem Name <span className="text-violet-400">*</span>
             </label>
             <input
               type="text"
@@ -157,38 +157,38 @@ export const AddEditProblemModal: React.FC<AddEditProblemModalProps> = ({
               placeholder="e.g. 3Sum, Lowest Common Ancestor, Subarray Sum Equals K"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 font-medium transition-all"
+              className="w-full text-sm bg-[#080918] border border-violet-500/20 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-400 font-medium transition-all"
             />
           </div>
 
           {/* Topic & Subtopic */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Topic
+              <label className="block text-xs font-bold text-slate-300 mb-1">
+                Topic Category
               </label>
               <select
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                className="w-full text-xs bg-[#080918] border border-violet-500/20 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-violet-400"
               >
                 {TOPIC_PRESETS.map((t) => (
-                  <option key={t} value={t}>
+                  <option key={t} value={t} className="bg-[#0e1028] text-white">
                     {t}
                   </option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Subtopic / Pattern
+              <label className="block text-xs font-bold text-slate-300 mb-1">
+                Subtopic / Pattern Invariant
               </label>
               <input
                 type="text"
                 placeholder="e.g. Monotonic Stack, TopoSort, Trie"
                 value={subtopic}
                 onChange={(e) => setSubtopic(e.target.value)}
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                className="w-full text-xs bg-[#080918] border border-violet-500/20 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-violet-400"
               />
             </div>
           </div>
@@ -196,7 +196,7 @@ export const AddEditProblemModal: React.FC<AddEditProblemModalProps> = ({
           {/* Difficulty & Platform */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-slate-300 mb-1">
                 Difficulty
               </label>
               <div className="grid grid-cols-3 gap-2">
@@ -208,11 +208,11 @@ export const AddEditProblemModal: React.FC<AddEditProblemModalProps> = ({
                     className={`py-1.5 rounded-xl text-xs font-bold transition-all border ${
                       difficulty === diff
                         ? diff === 'Easy'
-                          ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm'
+                          ? 'bg-emerald-950/60 text-emerald-300 border-emerald-500/60 shadow-sm'
                           : diff === 'Medium'
-                          ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
-                          : 'bg-rose-500 text-white border-rose-500 shadow-sm'
-                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                          ? 'bg-amber-950/60 text-amber-300 border-amber-500/60 shadow-sm'
+                          : 'bg-violet-950/60 text-violet-300 border-violet-500/60 shadow-sm'
+                        : 'bg-[#080918] text-slate-400 border-violet-500/20 hover:text-white'
                     }`}
                   >
                     {diff}
@@ -222,38 +222,38 @@ export const AddEditProblemModal: React.FC<AddEditProblemModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-slate-300 mb-1">
                 Platform
               </label>
               <select
                 value={platform}
                 onChange={(e) => setPlatform(e.target.value as Platform)}
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                className="w-full text-xs bg-[#080918] border border-violet-500/20 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-violet-400"
               >
-                <option value="LeetCode">LeetCode</option>
-                <option value="Codeforces">Codeforces</option>
-                <option value="GeeksforGeeks">GeeksforGeeks</option>
-                <option value="CodeStudio">CodeStudio</option>
-                <option value="HackerRank">HackerRank</option>
-                <option value="Other">Other</option>
+                <option value="LeetCode" className="bg-[#0e1028]">LeetCode</option>
+                <option value="Codeforces" className="bg-[#0e1028]">Codeforces</option>
+                <option value="GeeksforGeeks" className="bg-[#0e1028]">GeeksforGeeks</option>
+                <option value="CodeStudio" className="bg-[#0e1028]">CodeStudio</option>
+                <option value="HackerRank" className="bg-[#0e1028]">HackerRank</option>
+                <option value="Other" className="bg-[#0e1028]">Other</option>
               </select>
             </div>
           </div>
 
           {/* URL */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+            <label className="block text-xs font-bold text-slate-300 mb-1 flex items-center justify-between">
               <span>Platform Problem URL</span>
-              <span className="text-[10px] text-slate-400 font-normal">Optional</span>
+              <span className="text-[10px] text-slate-500 font-normal">Optional</span>
             </label>
             <div className="relative">
-              <Link2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Link2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
               <input
                 type="url"
                 placeholder="https://leetcode.com/problems/..."
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                className="w-full text-xs pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                className="w-full text-xs pl-8 pr-3 py-2 bg-[#080918] border border-violet-500/20 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-violet-400"
               />
             </div>
           </div>
@@ -261,25 +261,25 @@ export const AddEditProblemModal: React.FC<AddEditProblemModalProps> = ({
           {/* Status & Time Spent */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-slate-300 mb-1">
                 Current Status
               </label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as ProblemStatus)}
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                className="w-full text-xs bg-[#080918] border border-violet-500/20 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-violet-400"
               >
-                <option value="Not Started">Not Started</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Solved Independently">Solved Independently</option>
-                <option value="Solved with Hints">Solved with Hints</option>
-                <option value="Needs Revision">Needs Revision</option>
+                <option value="Not Started" className="bg-[#0e1028]">Not Started</option>
+                <option value="In Progress" className="bg-[#0e1028]">In Progress</option>
+                <option value="Solved Independently" className="bg-[#0e1028]">Solved Independently</option>
+                <option value="Solved with Hints" className="bg-[#0e1028]">Solved with Hints</option>
+                <option value="Needs Revision" className="bg-[#0e1028]">Needs Revision</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center">
-                <Clock size={12} className="mr-1 text-slate-400" />
+              <label className="block text-xs font-bold text-slate-300 mb-1 flex items-center">
+                <Clock size={12} className="mr-1 text-slate-500" />
                 <span>Time Spent (Minutes)</span>
               </label>
               <input
@@ -287,7 +287,7 @@ export const AddEditProblemModal: React.FC<AddEditProblemModalProps> = ({
                 min="0"
                 value={timeSpentMinutes}
                 onChange={(e) => setTimeSpentMinutes(Math.max(0, parseInt(e.target.value, 10) || 0))}
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                className="w-full text-xs bg-[#080918] border border-violet-500/20 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-violet-400"
               />
             </div>
           </div>
@@ -295,7 +295,7 @@ export const AddEditProblemModal: React.FC<AddEditProblemModalProps> = ({
           {/* Time & Space Complexity */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-slate-300 mb-1">
                 Time Complexity
               </label>
               <input
@@ -303,11 +303,11 @@ export const AddEditProblemModal: React.FC<AddEditProblemModalProps> = ({
                 placeholder="e.g. O(N log N)"
                 value={timeComplexity}
                 onChange={(e) => setTimeComplexity(e.target.value)}
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-mono focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                className="w-full text-xs bg-[#080918] border border-violet-500/20 rounded-xl px-3 py-2 text-violet-200 font-mono focus:outline-none focus:border-violet-400"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-slate-300 mb-1">
                 Space Complexity
               </label>
               <input
@@ -315,43 +315,43 @@ export const AddEditProblemModal: React.FC<AddEditProblemModalProps> = ({
                 placeholder="e.g. O(1) or O(N)"
                 value={spaceComplexity}
                 onChange={(e) => setSpaceComplexity(e.target.value)}
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-mono focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                className="w-full text-xs bg-[#080918] border border-violet-500/20 rounded-xl px-3 py-2 text-violet-200 font-mono focus:outline-none focus:border-violet-400"
               />
             </div>
           </div>
 
           {/* Approach & Notes */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              Intuition & Approach
+            <label className="block text-xs font-bold text-slate-300 mb-1">
+              Intuition & Optimal Pattern
             </label>
             <textarea
               rows={2}
               placeholder="Key observation, invariant, or technique that unlocked the optimal solution..."
               value={approach}
               onChange={(e) => setApproach(e.target.value)}
-              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+              className="w-full text-xs bg-[#080918] border border-violet-500/20 rounded-xl p-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-violet-400"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              Personal Notes / Gotchas
+            <label className="block text-xs font-bold text-slate-300 mb-1">
+              Personal Pitfalls / Edge Cases
             </label>
             <textarea
               rows={2}
               placeholder="Edge cases to watch out for (e.g. integer overflow, empty string, cyclic graph)..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+              className="w-full text-xs bg-[#080918] border border-violet-500/20 rounded-xl p-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-violet-400"
             />
           </div>
 
           {/* In Today's Plan Toggle */}
-          <div className="pt-2 flex items-center justify-between bg-slate-50 p-3 rounded-2xl border border-slate-100">
+          <div className="pt-2 flex items-center justify-between bg-[#080918] p-3 rounded-2xl border border-violet-500/20">
             <div>
-              <span className="text-xs font-bold text-slate-800 block">
-                Assign to Today's Plan
+              <span className="text-xs font-bold text-white block">
+                Assign to Today's Orbit Plan
               </span>
               <span className="text-[11px] text-slate-400">
                 Immediately include this question in your active study queue
@@ -364,25 +364,25 @@ export const AddEditProblemModal: React.FC<AddEditProblemModalProps> = ({
                 onChange={(e) => setInTodayPlan(e.target.checked)}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-500" />
+              <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-violet-600" />
             </label>
           </div>
 
           {/* Submit Buttons */}
-          <div className="pt-4 border-t border-slate-100 flex items-center justify-end space-x-2.5">
+          <div className="pt-4 border-t border-violet-500/10 flex items-center justify-end space-x-2.5">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors"
+              className="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white hover:bg-violet-500/10 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white gradient-coral shadow-glow-coral active:scale-95 transition-all flex items-center space-x-1.5"
+              className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white gradient-violet shadow-glow-violet active:scale-95 transition-all flex items-center space-x-1.5 hover:opacity-95"
             >
               <CheckCircle size={15} />
-              <span>{editingProblem ? 'Save Changes' : 'Create Problem'}</span>
+              <span>{editingProblem ? 'Save Telemetry' : 'Commit Problem'}</span>
             </button>
           </div>
         </form>

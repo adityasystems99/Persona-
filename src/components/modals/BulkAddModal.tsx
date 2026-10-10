@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Copy, Check, FileText, Sparkles } from 'lucide-react';
+import { X, FileText, Check } from 'lucide-react';
 import { useDSA } from '../../context/DSAContext';
 import { Difficulty, Platform } from '../../types/dsa';
 
@@ -11,11 +11,7 @@ interface BulkAddModalProps {
 export const BulkAddModal: React.FC<BulkAddModalProps> = ({ isOpen, onClose }) => {
   const { bulkAddProblems } = useDSA();
 
-  const [rawText, setRawText] = useState(
-    `Lowest Common Ancestor of a Binary Search Tree, Easy, Trees & BST, https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-search-tree/
-Course Schedule, Medium, Graphs, https://leetcode.com/problems/course-schedule/
-Word Search II, Hard, Backtracking, https://leetcode.com/problems/word-search-ii/`
-  );
+  const [rawText, setRawText] = useState('');
   const [defaultDifficulty, setDefaultDifficulty] = useState<Difficulty>('Medium');
   const [defaultTopic, setDefaultTopic] = useState('General DSA');
 
@@ -26,7 +22,7 @@ Word Search II, Hard, Backtracking, https://leetcode.com/problems/word-search-ii
     if (lines.length === 0) return;
 
     const parsedItems = lines.map((line) => {
-      // Split by comma or tab or hyphen
+      // Split by comma
       const parts = line.split(',').map((p) => p.trim());
       const title = parts[0] || 'Untitled Problem';
 
@@ -54,27 +50,29 @@ Word Search II, Hard, Backtracking, https://leetcode.com/problems/word-search-ii
     onClose();
   };
 
+  const detectedCount = rawText.split('\n').filter((l) => l.trim()).length;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 overflow-hidden relative max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#04040a]/80 backdrop-blur-md animate-fade-in">
+      <div className="bg-[#0f1128] rounded-3xl max-w-xl w-full p-6 border border-violet-500/30 shadow-glow-violet/30 overflow-hidden relative max-h-[90vh] flex flex-col text-slate-200">
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+        <div className="flex items-center justify-between pb-4 border-b border-violet-500/10">
           <div className="flex items-center space-x-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-2xl gradient-violet text-white flex items-center justify-center shadow-glow-violet">
               <FileText size={20} />
             </div>
             <div>
-              <h3 className="font-extrabold text-slate-800 text-lg">
-                Paste Multiple Questions
+              <h3 className="font-extrabold text-white text-lg">
+                Batch Import Telemetry
               </h3>
               <p className="text-xs text-slate-400">
-                Quickly import multiple DSA problems at once
+                Paste raw lists to ingest multiple DSA questions directly
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-violet-500/10 transition-colors"
           >
             <X size={18} />
           </button>
@@ -82,76 +80,78 @@ Word Search II, Hard, Backtracking, https://leetcode.com/problems/word-search-ii
 
         {/* Content */}
         <div className="py-4 space-y-4 overflow-y-auto flex-1">
-          <div className="p-3 bg-purple-50/60 border border-purple-100 rounded-2xl text-xs text-purple-900">
-            <p className="font-semibold mb-1">Supported Format (one question per line):</p>
-            <code className="text-[11px] block bg-white/80 p-2 rounded-xl text-purple-800 font-mono">
+          <div className="p-3 bg-violet-950/30 border border-violet-500/20 rounded-2xl text-xs text-violet-300">
+            <p className="font-semibold mb-1 text-white">Supported Format (one problem per line):</p>
+            <code className="text-[11px] block bg-[#080918] p-2 rounded-xl text-violet-200 font-mono border border-violet-500/20">
               Problem Name, Difficulty, Topic, URL (optional)
             </code>
-            <p className="text-[11px] mt-1 text-purple-600">
-              Or simply paste just the problem titles line-by-line!
+            <p className="text-[11px] mt-1 text-slate-400">
+              Or simply paste question titles line-by-line — defaults will be applied automatically!
             </p>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              Paste Questions Here
+            <label className="block text-xs font-bold text-slate-300 mb-1">
+              Questions Batch Payload
             </label>
             <textarea
               rows={8}
               value={rawText}
               onChange={(e) => setRawText(e.target.value)}
-              placeholder="e.g.&#10;Two Sum, Easy, Arrays, https://leetcode.com/problems/two-sum/&#10;3Sum, Medium, Two Pointers"
-              className="w-full text-xs font-mono bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+              placeholder="e.g.&#10;Two Sum, Easy, Arrays, https://leetcode.com/problems/two-sum/&#10;3Sum, Medium, Two Pointers&#10;Trapping Rain Water, Hard, Two Pointers"
+              className="w-full text-xs font-mono bg-[#080918] border border-violet-500/20 rounded-xl p-3 text-violet-100 placeholder-slate-600 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-400"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">
+              <label className="block text-xs font-semibold text-slate-300 mb-1">
                 Default Difficulty
               </label>
               <select
                 value={defaultDifficulty}
                 onChange={(e) => setDefaultDifficulty(e.target.value as Difficulty)}
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800"
+                className="w-full text-xs bg-[#080918] border border-violet-500/20 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-violet-400"
               >
-                <option value="Easy">Easy</option>
-                <option value="Medium">Medium</option>
-                <option value="Hard">Hard</option>
+                <option value="Easy" className="bg-[#0e1028]">Easy</option>
+                <option value="Medium" className="bg-[#0e1028]">Medium</option>
+                <option value="Hard" className="bg-[#0e1028]">Hard</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">
+              <label className="block text-xs font-semibold text-slate-300 mb-1">
                 Default Topic
               </label>
               <input
                 type="text"
                 value={defaultTopic}
                 onChange={(e) => setDefaultTopic(e.target.value)}
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800"
+                className="w-full text-xs bg-[#080918] border border-violet-500/20 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-violet-400"
               />
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-          <span className="text-xs text-slate-400">
-            {rawText.split('\n').filter((l) => l.trim()).length} problems detected
+        <div className="pt-3 border-t border-violet-500/10 flex items-center justify-between">
+          <span className="text-xs text-slate-400 font-mono">
+            {detectedCount} problem{detectedCount === 1 ? '' : 's'} detected
           </span>
+
           <div className="flex items-center space-x-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
+              className="px-4 py-2 text-xs font-bold text-slate-400 hover:text-white transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleImport}
-              className="px-5 py-2.5 rounded-xl text-xs font-bold text-white gradient-coral shadow-glow-coral flex items-center space-x-1.5 active:scale-95 transition-all"
+              disabled={detectedCount === 0}
+              className="px-5 py-2 rounded-xl text-xs font-bold text-white gradient-violet shadow-glow-violet active:scale-95 transition-all flex items-center space-x-1.5 disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-95"
             >
-              <Sparkles size={14} />
-              <span>Import to Question Bank</span>
+              <Check size={14} />
+              <span>Import to Database</span>
             </button>
           </div>
         </div>

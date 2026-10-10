@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, FolderPlus, Video, Link, Clock, BookOpen, Layers } from 'lucide-react';
+import { X, FolderPlus, Video, Link, Clock } from 'lucide-react';
 import { PlaylistCategory } from '../../types/dsa';
 import { parseTimeToSeconds } from '../../data/playlistData';
 
@@ -59,22 +59,22 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/90 w-full max-w-lg overflow-hidden animate-scale-up">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#04040a]/80 backdrop-blur-md animate-fade-in">
+      <div className="bg-[#0f1128] rounded-3xl shadow-glow-violet/30 border border-violet-500/30 w-full max-w-lg overflow-hidden animate-scale-up text-slate-200">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-violet-500/10 bg-[#0c0e22]">
           <div className="flex items-center space-x-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-coral flex items-center justify-center text-white shadow-glow-coral">
+            <div className="w-9 h-9 rounded-xl gradient-violet flex items-center justify-center text-white shadow-glow-violet">
               <FolderPlus size={18} />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900">Create Study Playlist</h2>
-              <p className="text-xs text-slate-500">Group your learning sequence with timestamps</p>
+              <h2 className="text-base font-bold text-white">Create Orbital Playlist</h2>
+              <p className="text-xs text-slate-400">Organize your learning sequence with timestamps</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
+            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-violet-500/10 transition-colors"
           >
             <X size={18} />
           </button>
@@ -84,7 +84,7 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Category Selection */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
               Subject Category
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -93,8 +93,8 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
                 onClick={() => setCategory('dsa')}
                 className={`flex items-center justify-center p-2.5 rounded-xl border text-xs font-bold transition-all ${
                   category === 'dsa'
-                    ? 'border-rose-500 bg-rose-50/70 text-rose-600 shadow-sm'
-                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                    ? 'border-violet-500 bg-violet-950/40 text-violet-300 shadow-glow-violet/20'
+                    : 'border-violet-500/20 bg-[#080918] text-slate-400 hover:text-white'
                 }`}
               >
                 DSA Topicwise
@@ -104,8 +104,8 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
                 onClick={() => setCategory('system-design')}
                 className={`flex items-center justify-center p-2.5 rounded-xl border text-xs font-bold transition-all ${
                   category === 'system-design'
-                    ? 'border-purple-500 bg-purple-50/70 text-purple-600 shadow-sm'
-                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                    ? 'border-violet-500 bg-violet-950/40 text-violet-300 shadow-glow-violet/20'
+                    : 'border-violet-500/20 bg-[#080918] text-slate-400 hover:text-white'
                 }`}
               >
                 System Design
@@ -115,8 +115,8 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
                 onClick={() => setCategory('dbms')}
                 className={`flex items-center justify-center p-2.5 rounded-xl border text-xs font-bold transition-all ${
                   category === 'dbms'
-                    ? 'border-blue-500 bg-blue-50/70 text-blue-600 shadow-sm'
-                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                    ? 'border-violet-500 bg-violet-950/40 text-violet-300 shadow-glow-violet/20'
+                    : 'border-violet-500/20 bg-[#080918] text-slate-400 hover:text-white'
                 }`}
               >
                 DBMS
@@ -126,8 +126,8 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
                 onClick={() => setCategory('cn-os')}
                 className={`flex items-center justify-center p-2.5 rounded-xl border text-xs font-bold transition-all ${
                   category === 'cn-os'
-                    ? 'border-amber-500 bg-amber-50/70 text-amber-600 shadow-sm'
-                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                    ? 'border-violet-500 bg-violet-950/40 text-violet-300 shadow-glow-violet/20'
+                    : 'border-violet-500/20 bg-[#080918] text-slate-400 hover:text-white'
                 }`}
               >
                 CN & OS Prep
@@ -137,7 +137,7 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
 
           {/* Title */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
               Playlist Title *
             </label>
             <input
@@ -146,14 +146,14 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
               placeholder="e.g. Dynamic Programming from Striver / NeetCode"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all"
+              className="w-full px-3.5 py-2.5 bg-[#080918] border border-violet-500/20 rounded-xl text-sm font-medium text-white placeholder-slate-500 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-400 transition-all"
             />
           </div>
 
           {/* DSA Topic Selector (if DSA) */}
           {category === 'dsa' && (
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
                 DSA Topic (Optional Tag)
               </label>
               <input
@@ -162,7 +162,7 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
                 placeholder="e.g. Dynamic Programming, Trees, Graphs..."
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all"
+                className="w-full px-3.5 py-2.5 bg-[#080918] border border-violet-500/20 rounded-xl text-sm font-medium text-white placeholder-slate-500 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-400 transition-all"
               />
               <datalist id="dsa-topics-list">
                 {DSA_SUGGESTED_TOPICS.map((top) => (
@@ -174,7 +174,7 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
 
           {/* Description */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
               Description / Notes
             </label>
             <textarea
@@ -182,22 +182,22 @@ export const AddPlaylistModal: React.FC<AddPlaylistModalProps> = ({
               placeholder="Key concepts covered, course syllabus, target timeline..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all resize-none"
+              className="w-full px-3.5 py-2.5 bg-[#080918] border border-violet-500/20 rounded-xl text-sm font-medium text-slate-200 placeholder-slate-500 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-400 transition-all resize-none"
             />
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
+          <div className="flex items-center justify-end space-x-3 pt-3 border-t border-violet-500/10">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors"
+              className="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-coral hover:opacity-95 shadow-glow-coral active:scale-95 transition-all"
+              className="px-5 py-2.5 rounded-xl text-xs font-bold text-white gradient-violet hover:opacity-95 shadow-glow-violet active:scale-95 transition-all"
             >
               Create Playlist
             </button>
@@ -259,22 +259,22 @@ export const AddPlaylistItemModal: React.FC<AddPlaylistItemModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/90 w-full max-w-lg overflow-hidden animate-scale-up">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#04040a]/80 backdrop-blur-md animate-fade-in">
+      <div className="bg-[#0f1128] rounded-3xl shadow-glow-violet/30 border border-violet-500/30 w-full max-w-lg overflow-hidden animate-scale-up text-slate-200">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-violet-500/10 bg-[#0c0e22]">
           <div className="flex items-center space-x-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-coral flex items-center justify-center text-white shadow-glow-coral">
+            <div className="w-9 h-9 rounded-xl gradient-violet flex items-center justify-center text-white shadow-glow-violet">
               <Video size={18} />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900">Add Video to Playlist</h2>
-              <p className="text-xs text-slate-500 font-medium truncate max-w-xs">{playlistTitle}</p>
+              <h2 className="text-base font-bold text-white">Add Video to Playlist</h2>
+              <p className="text-xs text-slate-400 font-medium truncate max-w-xs">{playlistTitle}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
+            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-violet-500/10 transition-colors"
           >
             <X size={18} />
           </button>
@@ -283,7 +283,7 @@ export const AddPlaylistItemModal: React.FC<AddPlaylistItemModalProps> = ({
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
               Video Title / Problem Name *
             </label>
             <input
@@ -292,12 +292,12 @@ export const AddPlaylistItemModal: React.FC<AddPlaylistItemModalProps> = ({
               placeholder="e.g. Trapping Rainwater (Two Pointers Approach)"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all"
+              className="w-full px-3.5 py-2.5 bg-[#080918] border border-violet-500/20 rounded-xl text-sm font-medium text-white placeholder-slate-500 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-400 transition-all"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
               Video Link (YouTube, Loom, etc.) *
             </label>
             <div className="relative">
@@ -307,14 +307,14 @@ export const AddPlaylistItemModal: React.FC<AddPlaylistItemModalProps> = ({
                 placeholder="https://www.youtube.com/watch?v=..."
                 value={videoUrl}
                 onChange={(e) => setVideoUrl(e.target.value)}
-                className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all"
+                className="w-full pl-9 pr-3.5 py-2.5 bg-[#080918] border border-violet-500/20 rounded-xl text-sm font-medium text-white placeholder-slate-500 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-400 transition-all"
               />
-              <Link size={15} className="absolute left-3 top-3 text-slate-400" />
+              <Link size={15} className="absolute left-3 top-3 text-slate-500" />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
               Total Duration (Optional)
             </label>
             <div className="relative">
@@ -323,15 +323,15 @@ export const AddPlaylistItemModal: React.FC<AddPlaylistItemModalProps> = ({
                 placeholder="e.g. 28:30 or 01:15:00"
                 value={durationStr}
                 onChange={(e) => setDurationStr(e.target.value)}
-                className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all"
+                className="w-full pl-9 pr-3.5 py-2.5 bg-[#080918] border border-violet-500/20 rounded-xl text-sm font-medium text-white placeholder-slate-500 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-400 transition-all"
               />
-              <Clock size={15} className="absolute left-3 top-3 text-slate-400" />
+              <Clock size={15} className="absolute left-3 top-3 text-slate-500" />
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">Format: MM:SS or HH:MM:SS</p>
+            <p className="text-[11px] text-slate-500 mt-1">Format: MM:SS or HH:MM:SS</p>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
               Initial Notes / Learning Objectives
             </label>
             <textarea
@@ -339,22 +339,22 @@ export const AddPlaylistItemModal: React.FC<AddPlaylistItemModalProps> = ({
               placeholder="Things to focus on, approach to take notes on..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all resize-none"
+              className="w-full px-3.5 py-2.5 bg-[#080918] border border-violet-500/20 rounded-xl text-sm font-medium text-slate-200 placeholder-slate-500 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-400 transition-all resize-none"
             />
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
+          <div className="flex items-center justify-end space-x-3 pt-3 border-t border-violet-500/10">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors"
+              className="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-coral hover:opacity-95 shadow-glow-coral active:scale-95 transition-all"
+              className="px-5 py-2.5 rounded-xl text-xs font-bold text-white gradient-violet hover:opacity-95 shadow-glow-violet active:scale-95 transition-all"
             >
               Add Video to Sequence
             </button>

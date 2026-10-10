@@ -15,13 +15,10 @@ import {
   Cpu,
   Code2,
   Search,
-  Filter,
-  Sparkles,
-  BarChart2,
   FolderOpen,
 } from 'lucide-react';
 import { useDSA } from '../../context/DSAContext';
-import { PlaylistCategory, Playlist, PlaylistItem } from '../../types/dsa';
+import { Playlist, PlaylistItem } from '../../types/dsa';
 import { formatSecondsToTime, getYouTubeTimestampUrl } from '../../data/playlistData';
 import { AddPlaylistModal, AddPlaylistItemModal } from '../modals/AddPlaylistModal';
 import { VideoTrackerModal } from '../modals/VideoTrackerModal';
@@ -106,14 +103,12 @@ export const PlaylistTrackerView: React.FC = () => {
     let totalVideos = 0;
     let completedVideos = 0;
     let totalWatchedSec = 0;
-    let totalDurationSec = 0;
 
     categoryPlaylists.forEach((pl) => {
       pl.items.forEach((it) => {
         totalVideos++;
         if (it.isCompleted) completedVideos++;
         totalWatchedSec += it.watchedSeconds || 0;
-        totalDurationSec += it.durationSeconds || 0;
       });
     });
 
@@ -130,7 +125,7 @@ export const PlaylistTrackerView: React.FC = () => {
   }, [categoryPlaylists]);
 
   // Handle note updates from modal
-  const handleUpdateNotes = (playlistId: string, itemId: string, notes: string) => {
+  const handleUpdateNotes = () => {
     // Already synced through local items update
   };
 
@@ -139,22 +134,22 @@ export const PlaylistTrackerView: React.FC = () => {
       {/* View Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center space-x-2">
-            <span className="p-2 rounded-xl bg-gradient-coral text-white shadow-glow-coral">
+          <div className="flex items-center space-x-2.5">
+            <span className="p-2 rounded-xl gradient-violet text-white shadow-glow-violet">
               <Video size={20} />
             </span>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-              Sequential Playlist & Timestamp Tracker
+            <h1 className="text-2xl font-black text-white tracking-tight">
+              Sequential Orbit Tracks & Telemetry
             </h1>
           </div>
-          <p className="text-sm text-slate-500 font-medium mt-1">
-            Track video lectures in your exact custom sequence with live watch timestamps and concept bookmarks.
+          <p className="text-sm text-slate-400 font-medium mt-1">
+            Track video flight modules in your custom sequence with live watch timestamps and moment bookmarks.
           </p>
         </div>
 
         <button
           onClick={() => setIsAddPlaylistOpen(true)}
-          className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-coral hover:opacity-95 shadow-glow-coral active:scale-95 transition-all self-start md:self-auto"
+          className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white gradient-violet shadow-glow-violet hover:opacity-95 active:scale-95 transition-all self-start md:self-auto"
         >
           <Plus size={16} />
           <span>New Playlist</span>
@@ -162,7 +157,7 @@ export const PlaylistTrackerView: React.FC = () => {
       </div>
 
       {/* Category Navigation Bar */}
-      <div className="flex items-center space-x-2 overflow-x-auto pb-2 border-b border-slate-200">
+      <div className="flex items-center space-x-2 overflow-x-auto pb-2 border-b border-violet-500/10">
         <button
           onClick={() => {
             setActivePlaylistCategory('dsa');
@@ -170,15 +165,15 @@ export const PlaylistTrackerView: React.FC = () => {
           }}
           className={`flex items-center space-x-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition-all whitespace-nowrap ${
             activePlaylistCategory === 'dsa'
-              ? 'bg-rose-500 text-white shadow-glow-coral'
-              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80'
+              ? 'gradient-violet text-white shadow-glow-violet'
+              : 'bg-[#0c0e22]/80 text-slate-400 hover:text-white border border-violet-500/20'
           }`}
         >
           <Code2 size={16} />
           <span>DSA Topicwise Prep</span>
           <span
             className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-              activePlaylistCategory === 'dsa' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
+              activePlaylistCategory === 'dsa' ? 'bg-white/20 text-white' : 'bg-[#121430] text-slate-400'
             }`}
           >
             {playlists.filter((p) => p.category === 'dsa').length}
@@ -189,17 +184,15 @@ export const PlaylistTrackerView: React.FC = () => {
           onClick={() => setActivePlaylistCategory('system-design')}
           className={`flex items-center space-x-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition-all whitespace-nowrap ${
             activePlaylistCategory === 'system-design'
-              ? 'bg-purple-600 text-white shadow-sm'
-              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80'
+              ? 'gradient-violet text-white shadow-glow-violet'
+              : 'bg-[#0c0e22]/80 text-slate-400 hover:text-white border border-violet-500/20'
           }`}
         >
           <Layers size={16} />
           <span>System Design</span>
           <span
             className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-              activePlaylistCategory === 'system-design'
-                ? 'bg-white/20 text-white'
-                : 'bg-slate-100 text-slate-500'
+              activePlaylistCategory === 'system-design' ? 'bg-white/20 text-white' : 'bg-[#121430] text-slate-400'
             }`}
           >
             {playlists.filter((p) => p.category === 'system-design').length}
@@ -210,15 +203,15 @@ export const PlaylistTrackerView: React.FC = () => {
           onClick={() => setActivePlaylistCategory('dbms')}
           className={`flex items-center space-x-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition-all whitespace-nowrap ${
             activePlaylistCategory === 'dbms'
-              ? 'bg-blue-600 text-white shadow-sm'
-              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80'
+              ? 'gradient-violet text-white shadow-glow-violet'
+              : 'bg-[#0c0e22]/80 text-slate-400 hover:text-white border border-violet-500/20'
           }`}
         >
           <Database size={16} />
           <span>Database Management (DBMS)</span>
           <span
             className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-              activePlaylistCategory === 'dbms' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
+              activePlaylistCategory === 'dbms' ? 'bg-white/20 text-white' : 'bg-[#121430] text-slate-400'
             }`}
           >
             {playlists.filter((p) => p.category === 'dbms').length}
@@ -229,15 +222,15 @@ export const PlaylistTrackerView: React.FC = () => {
           onClick={() => setActivePlaylistCategory('cn-os')}
           className={`flex items-center space-x-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition-all whitespace-nowrap ${
             activePlaylistCategory === 'cn-os'
-              ? 'bg-amber-600 text-white shadow-sm'
-              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80'
+              ? 'gradient-violet text-white shadow-glow-violet'
+              : 'bg-[#0c0e22]/80 text-slate-400 hover:text-white border border-violet-500/20'
           }`}
         >
           <Cpu size={16} />
           <span>CN & OS Prep</span>
           <span
             className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-              activePlaylistCategory === 'cn-os' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
+              activePlaylistCategory === 'cn-os' ? 'bg-white/20 text-white' : 'bg-[#121430] text-slate-400'
             }`}
           >
             {playlists.filter((p) => p.category === 'cn-os').length}
@@ -247,33 +240,33 @@ export const PlaylistTrackerView: React.FC = () => {
 
       {/* Summary KPI Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-soft">
+        <div className="card-soft p-4 bg-[#0c0e22]/90 border border-violet-500/20">
           <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Playlists</p>
-          <p className="text-xl font-extrabold text-slate-900 mt-0.5">{stats.playlistCount}</p>
+          <p className="text-xl font-extrabold text-white font-mono mt-0.5">{stats.playlistCount}</p>
           <p className="text-[11px] text-slate-500 mt-1">In this track</p>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-soft">
+        <div className="card-soft p-4 bg-[#0c0e22]/90 border border-violet-500/20">
           <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Videos Tracked</p>
-          <p className="text-xl font-extrabold text-slate-900 mt-0.5">
+          <p className="text-xl font-extrabold text-white font-mono mt-0.5">
             {stats.completedVideos} / {stats.totalVideos}
           </p>
-          <p className="text-[11px] text-emerald-600 font-semibold mt-1">{stats.completionRate}% finished</p>
+          <p className="text-[11px] text-emerald-400 font-semibold mt-1">{stats.completionRate}% finished</p>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-soft">
+        <div className="card-soft p-4 bg-[#0c0e22]/90 border border-violet-500/20">
           <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Hours Watched</p>
-          <p className="text-xl font-extrabold text-rose-600 mt-0.5">{stats.watchedHours} hrs</p>
+          <p className="text-xl font-extrabold text-violet-300 font-mono mt-0.5">{stats.watchedHours} hrs</p>
           <p className="text-[11px] text-slate-500 mt-1">Saved timestamps</p>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-soft">
+        <div className="card-soft p-4 bg-[#0c0e22]/90 border border-violet-500/20">
           <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Sequence Mode</p>
-          <p className="text-sm font-extrabold text-slate-800 mt-1 flex items-center space-x-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <p className="text-sm font-extrabold text-white mt-1 flex items-center space-x-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span>Custom Ordered</span>
           </p>
-          <p className="text-[11px] text-slate-400 mt-0.5">Decided by you</p>
+          <p className="text-[11px] text-slate-500 mt-0.5">Decided by you</p>
         </div>
       </div>
 
@@ -285,8 +278,8 @@ export const PlaylistTrackerView: React.FC = () => {
             onClick={() => setSelectedDsaTopic('all')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
               selectedDsaTopic === 'all'
-                ? 'bg-slate-900 text-white shadow-sm'
-                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                ? 'bg-violet-600 text-white shadow-glow-violet/30'
+                : 'bg-[#0c0e22] text-slate-400 border border-violet-500/20 hover:text-white'
             }`}
           >
             All Topics
@@ -297,8 +290,8 @@ export const PlaylistTrackerView: React.FC = () => {
               onClick={() => setSelectedDsaTopic(top)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
                 selectedDsaTopic === top
-                  ? 'bg-rose-500 text-white shadow-sm'
-                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                  ? 'bg-violet-600 text-white shadow-glow-violet/30'
+                  : 'bg-[#0c0e22] text-slate-400 border border-violet-500/20 hover:text-white'
               }`}
             >
               {top}
@@ -314,9 +307,9 @@ export const PlaylistTrackerView: React.FC = () => {
           placeholder="Search playlists, lectures, or topics..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-soft"
+          className="w-full pl-10 pr-4 py-2.5 bg-[#0a0b1c] border border-violet-500/20 rounded-2xl text-xs font-medium text-slate-200 placeholder-slate-500 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-400 transition-all"
         />
-        <Search size={16} className="absolute left-3.5 top-3 text-slate-400" />
+        <Search size={16} className="absolute left-3.5 top-3 text-slate-500" />
       </div>
 
       {/* Playlists List */}
@@ -330,29 +323,29 @@ export const PlaylistTrackerView: React.FC = () => {
             return (
               <div
                 key={pl.id}
-                className="bg-white rounded-3xl border border-slate-200/90 shadow-soft overflow-hidden transition-all hover:border-slate-300"
+                className="bg-[#0c0e22]/90 rounded-3xl border border-violet-500/20 shadow-soft overflow-hidden transition-all hover:border-violet-500/40"
               >
                 {/* Playlist Card Header */}
-                <div className="p-5 sm:p-6 border-b border-slate-100 bg-gradient-to-r from-slate-50/70 to-white">
+                <div className="p-5 sm:p-6 border-b border-violet-500/10 bg-[#0e1029]/60">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-start space-x-3">
                       {/* Sequential Order Steppers for Playlist */}
-                      <div className="flex flex-col items-center bg-white border border-slate-200 rounded-xl p-0.5 shadow-sm">
+                      <div className="flex flex-col items-center bg-[#080916] border border-violet-500/20 rounded-xl p-0.5">
                         <button
                           onClick={() => reorderPlaylists(pl.id, 'up')}
                           disabled={pIndex === 0}
-                          className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-20 transition-colors"
+                          className="p-1 text-slate-400 hover:text-white disabled:opacity-20 transition-colors"
                           title="Move playlist up in sequence"
                         >
                           <ChevronUp size={14} />
                         </button>
-                        <span className="text-[10px] font-extrabold text-slate-800 px-1">
+                        <span className="text-[10px] font-extrabold text-violet-300 font-mono px-1">
                           #{pl.order}
                         </span>
                         <button
                           onClick={() => reorderPlaylists(pl.id, 'down')}
                           disabled={pIndex === categoryPlaylists.length - 1}
-                          className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-20 transition-colors"
+                          className="p-1 text-slate-400 hover:text-white disabled:opacity-20 transition-colors"
                           title="Move playlist down in sequence"
                         >
                           <ChevronDown size={14} />
@@ -361,15 +354,15 @@ export const PlaylistTrackerView: React.FC = () => {
 
                       <div>
                         <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                          <h2 className="text-base font-extrabold text-slate-900">{pl.title}</h2>
+                          <h2 className="text-base font-extrabold text-white">{pl.title}</h2>
                           {pl.topic && (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-200/60">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-500/20 text-violet-300 border border-violet-500/30">
                               {pl.topic}
                             </span>
                           )}
                         </div>
                         {pl.description && (
-                          <p className="text-xs text-slate-500 font-medium mt-1">{pl.description}</p>
+                          <p className="text-xs text-slate-400 font-medium mt-1">{pl.description}</p>
                         )}
                       </div>
                     </div>
@@ -377,15 +370,15 @@ export const PlaylistTrackerView: React.FC = () => {
                     {/* Right Playlist Metrics & Actions */}
                     <div className="flex items-center space-x-3 self-end sm:self-auto">
                       <div className="text-right">
-                        <span className="text-xs font-bold text-slate-800">
+                        <span className="text-xs font-bold text-white font-mono">
                           {completedCount} / {pl.items.length} Done
                         </span>
-                        <span className="text-xs text-slate-400 ml-1.5 font-medium">
+                        <span className="text-xs text-slate-400 ml-1.5 font-medium font-mono">
                           ({formatSecondsToTime(totalSec)})
                         </span>
-                        <div className="w-28 bg-slate-100 h-2 rounded-full mt-1 overflow-hidden">
+                        <div className="w-28 bg-[#080916] h-2 rounded-full mt-1 overflow-hidden">
                           <div
-                            className="bg-gradient-coral h-full rounded-full transition-all"
+                            className="gradient-violet h-full rounded-full transition-all"
                             style={{ width: `${progress}%` }}
                           />
                         </div>
@@ -393,7 +386,7 @@ export const PlaylistTrackerView: React.FC = () => {
 
                       <button
                         onClick={() => setActivePlaylistForNewVideo(pl)}
-                        className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 hover:bg-rose-100 transition-colors"
+                        className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-bold text-violet-300 bg-violet-500/20 border border-violet-500/30 hover:bg-violet-500/30 transition-colors"
                       >
                         <Plus size={13} />
                         <span>Add Video</span>
@@ -401,7 +394,7 @@ export const PlaylistTrackerView: React.FC = () => {
 
                       <button
                         onClick={() => deletePlaylist(pl.id)}
-                        className="p-1.5 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-slate-100 transition-colors"
+                        className="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-rose-500/10 transition-colors"
                         title="Delete playlist"
                       >
                         <Trash2 size={15} />
@@ -411,7 +404,7 @@ export const PlaylistTrackerView: React.FC = () => {
                 </div>
 
                 {/* Sequential Videos Table / List */}
-                <div className="divide-y divide-slate-100">
+                <div className="divide-y divide-violet-500/10">
                   {pl.items && pl.items.length > 0 ? (
                     pl.items
                       .sort((a, b) => a.order - b.order)
@@ -427,7 +420,7 @@ export const PlaylistTrackerView: React.FC = () => {
                           <div
                             key={item.id}
                             className={`p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-3.5 transition-colors ${
-                              isDone ? 'bg-slate-50/50' : 'hover:bg-slate-50/60'
+                              isDone ? 'bg-[#090b1c]/40' : 'hover:bg-[#10122e]/40'
                             }`}
                           >
                             {/* Left: Sequence Controls + Title + Badges */}
@@ -437,18 +430,18 @@ export const PlaylistTrackerView: React.FC = () => {
                                 <button
                                   onClick={() => reorderPlaylistItems(pl.id, item.id, 'up')}
                                   disabled={vIndex === 0}
-                                  className="p-1 text-slate-300 hover:text-slate-600 disabled:opacity-20 transition-colors"
+                                  className="p-1 text-slate-500 hover:text-white disabled:opacity-20 transition-colors"
                                   title="Move video earlier in sequence"
                                 >
                                   <ChevronUp size={14} />
                                 </button>
-                                <span className="w-6 text-center text-xs font-extrabold font-mono text-slate-500">
+                                <span className="w-6 text-center text-xs font-extrabold font-mono text-violet-400">
                                   {item.order}
                                 </span>
                                 <button
                                   onClick={() => reorderPlaylistItems(pl.id, item.id, 'down')}
                                   disabled={vIndex === pl.items.length - 1}
-                                  className="p-1 text-slate-300 hover:text-slate-600 disabled:opacity-20 transition-colors"
+                                  className="p-1 text-slate-500 hover:text-white disabled:opacity-20 transition-colors"
                                   title="Move video later in sequence"
                                 >
                                   <ChevronDown size={14} />
@@ -460,15 +453,15 @@ export const PlaylistTrackerView: React.FC = () => {
                                 onClick={() =>
                                   updateWatchTimestamp(pl.id, item.id, item.watchedSeconds, !item.isCompleted)
                                 }
-                                className="pt-0.5 text-slate-400 hover:text-emerald-600 transition-colors"
+                                className="pt-0.5 text-slate-500 hover:text-emerald-400 transition-colors"
                                 title={isDone ? 'Mark as incomplete' : 'Mark as complete'}
                               >
                                 <CheckCircle2
                                   size={19}
                                   className={
                                     isDone
-                                      ? 'text-emerald-500 fill-emerald-100'
-                                      : 'text-slate-300 hover:text-slate-500'
+                                      ? 'text-emerald-400 fill-emerald-950/40'
+                                      : 'text-slate-600 hover:text-slate-400'
                                   }
                                 />
                               </button>
@@ -476,17 +469,17 @@ export const PlaylistTrackerView: React.FC = () => {
                               {/* Title & Timestamp Details */}
                               <div className="min-w-0">
                                 <h3
-                                  className={`text-sm font-bold text-slate-900 line-clamp-1 ${
-                                    isDone ? 'line-through text-slate-400' : ''
+                                  className={`text-sm font-bold text-white line-clamp-1 ${
+                                    isDone ? 'line-through text-slate-500' : ''
                                   }`}
                                 >
                                   {item.title}
                                 </h3>
 
-                                <div className="flex items-center space-x-2.5 mt-1 text-xs text-slate-500 font-medium flex-wrap gap-y-1">
+                                <div className="flex items-center space-x-2.5 mt-1 text-xs text-slate-400 font-medium flex-wrap gap-y-1">
                                   {/* Timestamp Badge */}
-                                  <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-slate-100 font-mono font-bold text-slate-700 text-[11px]">
-                                    <Clock size={11} className="text-slate-400" />
+                                  <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-[#080916] border border-violet-500/20 font-mono font-bold text-violet-300 text-[11px]">
+                                    <Clock size={11} className="text-violet-400" />
                                     <span>
                                       {formatSecondsToTime(item.watchedSeconds)}
                                       {item.durationSeconds > 0 && ` / ${formatSecondsToTime(item.durationSeconds)}`}
@@ -495,7 +488,7 @@ export const PlaylistTrackerView: React.FC = () => {
 
                                   {/* Key Moments Count */}
                                   {item.bookmarks && item.bookmarks.length > 0 && (
-                                    <span className="inline-flex items-center space-x-1 text-[11px] font-semibold text-purple-600">
+                                    <span className="inline-flex items-center space-x-1 text-[11px] font-semibold text-purple-400">
                                       <Bookmark size={11} />
                                       <span>{item.bookmarks.length} moments</span>
                                     </span>
@@ -510,10 +503,10 @@ export const PlaylistTrackerView: React.FC = () => {
 
                                 {/* Mini Progress bar */}
                                 {item.durationSeconds > 0 && (
-                                  <div className="w-36 bg-slate-100 h-1 rounded-full mt-2 overflow-hidden">
+                                  <div className="w-36 bg-[#080916] h-1 rounded-full mt-2 overflow-hidden">
                                     <div
                                       className={`h-full rounded-full transition-all ${
-                                        isDone ? 'bg-emerald-500' : 'bg-gradient-coral'
+                                        isDone ? 'bg-emerald-400' : 'gradient-violet'
                                       }`}
                                       style={{ width: `${itemProgress}%` }}
                                     />
@@ -528,24 +521,24 @@ export const PlaylistTrackerView: React.FC = () => {
                                 href={resumeUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="hidden sm:inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+                                className="hidden sm:inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-300 bg-[#080916] border border-violet-500/20 hover:text-white hover:border-violet-500/40 transition-colors shadow-sm"
                                 title="Open video directly with timestamp"
                               >
-                                <ExternalLink size={12} className="text-rose-500" />
+                                <ExternalLink size={12} className="text-violet-400" />
                                 <span>Resume</span>
                               </a>
 
                               <button
                                 onClick={() => setActiveTrackingVideo({ playlistId: pl.id, item })}
-                                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 transition-all shadow-sm active:scale-95"
+                                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-violet-600 hover:bg-violet-500 transition-all shadow-glow-violet/20 active:scale-95"
                               >
                                 <Play size={12} />
-                                <span>Watch & Track</span>
+                                <span>Track Orbit</span>
                               </button>
 
                               <button
                                 onClick={() => deletePlaylistItem(pl.id, item.id)}
-                                className="p-1.5 text-slate-300 hover:text-rose-500 rounded-lg hover:bg-slate-100 transition-colors"
+                                className="p-1.5 text-slate-500 hover:text-rose-400 rounded-lg hover:bg-rose-500/10 transition-colors"
                                 title="Remove video from sequence"
                               >
                                 <Trash2 size={14} />
@@ -559,7 +552,7 @@ export const PlaylistTrackerView: React.FC = () => {
                       No videos added to this playlist yet.{' '}
                       <button
                         onClick={() => setActivePlaylistForNewVideo(pl)}
-                        className="text-rose-600 font-bold hover:underline"
+                        className="text-violet-400 font-bold hover:underline"
                       >
                         Add your first video lecture
                       </button>
@@ -572,13 +565,13 @@ export const PlaylistTrackerView: React.FC = () => {
         </div>
       ) : (
         /* Empty State */
-        <div className="bg-white rounded-3xl p-10 text-center border border-slate-200 shadow-soft space-y-4">
-          <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-500 mx-auto flex items-center justify-center">
+        <div className="bg-[#0c0e22]/90 rounded-3xl p-10 text-center border border-violet-500/20 shadow-soft space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-violet-950/40 border border-violet-500/30 text-violet-400 mx-auto flex items-center justify-center">
             <FolderOpen size={28} />
           </div>
           <div>
-            <h3 className="text-base font-extrabold text-slate-900">No Playlists in this Track Yet</h3>
-            <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">
+            <h3 className="text-base font-extrabold text-white">No Playlists in this Orbit Track Yet</h3>
+            <p className="text-xs text-slate-400 max-w-md mx-auto mt-1">
               Add your custom video playlists for{' '}
               {activePlaylistCategory === 'dsa'
                 ? 'DSA Topicwise prep'
@@ -592,7 +585,7 @@ export const PlaylistTrackerView: React.FC = () => {
           </div>
           <button
             onClick={() => setIsAddPlaylistOpen(true)}
-            className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-coral shadow-glow-coral hover:opacity-95 transition-all"
+            className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-bold text-white gradient-violet shadow-glow-violet hover:opacity-95 transition-all"
           >
             <Plus size={16} />
             <span>Create First Playlist</span>
