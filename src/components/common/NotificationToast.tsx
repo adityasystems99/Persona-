@@ -31,6 +31,10 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOp
         return <Target className="text-purple-500" size={16} />;
       case 'success':
         return <CheckCircle2 className="text-emerald-500" size={16} />;
+      case 'milestone':
+        return <Sparkles className="text-amber-500" size={16} />;
+      case 'recovery':
+        return <Clock className="text-rose-500" size={16} />;
       default:
         return <Bell className="text-blue-500" size={16} />;
     }

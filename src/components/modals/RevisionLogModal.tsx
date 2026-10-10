@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Repeat2, CheckCircle2, History, AlertTriangle, Lightbulb } from 'lucide-react';
+import { X, Repeat2, CheckCircle2, History, AlertTriangle, Lightbulb, Clock, Sparkles } from 'lucide-react';
 import { useDSA } from '../../context/DSAContext';
 import { Problem } from '../../types/dsa';
 import { getTodayDateString } from '../../data/initialData';
@@ -15,7 +15,7 @@ export const RevisionLogModal: React.FC<RevisionLogModalProps> = ({
   onClose,
   problem,
 }) => {
-  const { scheduleRevision, logRevisionAttempt, removeRevision } = useDSA();
+  const { scheduleRevision, logSpacedRepetitionOutcome, removeRevision, settings } = useDSA();
 
   const [scheduledDate, setScheduledDate] = useState(
     problem?.revisionScheduledDate || getTodayDateString()
@@ -26,17 +26,25 @@ export const RevisionLogModal: React.FC<RevisionLogModalProps> = ({
 
   if (!isOpen || !problem) return null;
 
+  const currentStage = problem.spacedRepetitionStage || 0;
+  const intervals = settings.spacedRepetitionIntervals || [1, 3, 7, 14];
+
   const handleSaveSchedule = (e: React.FormEvent) => {
     e.preventDefault();
     scheduleRevision(problem.id, scheduledDate, mistakes, patternLearned);
     onClose();
   };
 
-  const handleLogAttempt = (success: boolean) => {
-    logRevisionAttempt(
+  const handleLogSpacedOutcome = (outcome: 'success' | 'hints' | 'failed') => {
+    logSpacedRepetitionOutcome(
       problem.id,
-      success,
-      attemptNotes.trim() || (success ? 'Solved independently during scheduled revision!' : 'Still required hints.')
+      outcome,
+      attemptNotes.trim() ||
+        (outcome === 'success'
+          ? 'Solved independently during scheduled revision'
+          : outcome === 'hints'
+          ? 'Required hints during revision'
+          : 'Failed re-attempt. Needs immediate review.')
     );
     onClose();
   };
@@ -52,10 +60,10 @@ export const RevisionLogModal: React.FC<RevisionLogModalProps> = ({
             </div>
             <div>
               <h3 className="font-extrabold text-slate-800 text-lg">
-                Revision & Mistake Notebook
+                Smart Spaced Revision Notebook
               </h3>
               <p className="text-xs text-slate-400 truncate max-w-xs">
-                {problem.title} • {problem.difficulty}
+                {problem.title} • {problem.difficulty} • Stage {currentStage}
               </p>
             </div>
           </div>
@@ -69,10 +77,25 @@ export const RevisionLogModal: React.FC<RevisionLogModalProps> = ({
 
         {/* Content */}
         <div className="py-4 space-y-4 overflow-y-auto flex-1">
-          {/* Schedule Date */}
+          {/* Spaced Repetition Stage Indicator */}
+          <div className="p-3 bg-purple-50/70 border border-purple-200/80 rounded-2xl flex items-center justify-between">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-purple-700 block">
+                Current Spaced Repetition Interval
+              </span>
+              <span className="text-xs font-extrabold text-purple-900">
+                Stage {currentStage} ({intervals[currentStage] || 30} Day Interval)
+              </span>
+            </div>
+            <span className="text-[11px] text-purple-600 font-semibold">
+              Due: {problem.revisionScheduledDate || 'Today'}
+            </span>
+          </div>
+
+          {/* Target Date */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              Target Revision Date
+              Scheduled Review Date
             </label>
             <input
               type="date"
@@ -104,7 +127,7 @@ export const RevisionLogModal: React.FC<RevisionLogModalProps> = ({
               <span>Core Intuition / Pattern Learned</span>
             </label>
             <textarea
-              rows={3}
+              rows={2}
               placeholder="e.g. When looking for subarray sums with negatives, use prefix sum hash map rather than sliding window..."
               value={patternLearned}
               onChange={(e) => setPatternLearned(e.target.value)}
@@ -112,37 +135,51 @@ export const RevisionLogModal: React.FC<RevisionLogModalProps> = ({
             />
           </div>
 
-          {/* Re-attempt logging */}
+          {/* Re-attempt logging with 3 Adaptive Outcomes */}
           <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80">
             <h4 className="text-xs font-bold text-slate-800 mb-1 flex items-center">
               <History size={13} className="mr-1 text-slate-500" />
-              Log Fresh Re-Attempt
+              Log Revision Performance Outcome
             </h4>
             <p className="text-[11px] text-slate-500 mb-2">
-              Did you re-attempt this problem today? Log the result to update your revision queue.
+              Performance dynamically adjusts your next spaced repetition review date:
             </p>
+
             <input
               type="text"
-              placeholder="Optional notes for today's re-attempt..."
+              placeholder="Optional observations on today's recall attempt..."
               value={attemptNotes}
               onChange={(e) => setAttemptNotes(e.target.value)}
               className="w-full text-xs bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-slate-800 mb-2.5 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
             />
-            <div className="flex items-center space-x-2">
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <button
                 type="button"
-                onClick={() => handleLogAttempt(true)}
-                className="flex-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-all flex items-center justify-center space-x-1"
+                onClick={() => handleLogSpacedOutcome('success')}
+                className="py-2 px-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold shadow-xs transition-all flex flex-col items-center text-center"
               >
-                <CheckCircle2 size={14} />
-                <span>Solved Solo (Resolve)</span>
+                <CheckCircle2 size={14} className="mb-0.5" />
+                <span>Solved Solo</span>
+                <span className="text-[9px] text-emerald-200 font-normal">Extend interval</span>
               </button>
+
               <button
                 type="button"
-                onClick={() => handleLogAttempt(false)}
-                className="flex-1 py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-sm transition-all flex items-center justify-center space-x-1"
+                onClick={() => handleLogSpacedOutcome('hints')}
+                className="py-2 px-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-bold shadow-xs transition-all flex flex-col items-center text-center"
               >
-                <span>Needed Hints (Keep Queued)</span>
+                <span>Needed Hints</span>
+                <span className="text-[9px] text-amber-100 font-normal">Retain short interval</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleLogSpacedOutcome('failed')}
+                className="py-2 px-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold shadow-xs transition-all flex flex-col items-center text-center"
+              >
+                <span>Failed Attempt</span>
+                <span className="text-[9px] text-rose-200 font-normal">Priority retry tomorrow</span>
               </button>
             </div>
           </div>
@@ -159,7 +196,7 @@ export const RevisionLogModal: React.FC<RevisionLogModalProps> = ({
                     key={rev.id}
                     className="p-2 rounded-xl bg-slate-50 text-xs border border-slate-100 flex items-center justify-between"
                   >
-                    <span className="text-slate-600 font-medium">{rev.notes}</span>
+                    <span className="text-slate-600 font-medium truncate max-w-xs">{rev.notes}</span>
                     <span
                       className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                         rev.success
@@ -206,7 +243,7 @@ export const RevisionLogModal: React.FC<RevisionLogModalProps> = ({
               onClick={handleSaveSchedule}
               className="px-4 py-2 rounded-xl text-xs font-bold text-white gradient-coral shadow-glow-coral active:scale-95 transition-all"
             >
-              Save Revision Notes
+              Save Notes
             </button>
           </div>
         </div>

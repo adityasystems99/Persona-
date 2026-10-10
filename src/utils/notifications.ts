@@ -40,6 +40,25 @@ export const isWithinStudyWindow = (startTime: string, endTime: string): boolean
   }
 };
 
+const sentKeysCache = new Set<string>();
+
+export const hasNotificationBeenDispatchedRecently = (dedupKey: string, ttlMs = 1800000): boolean => {
+  if (!dedupKey) return false;
+  const now = Date.now();
+  const sessionKey = `algopulse_notif_${dedupKey}`;
+  try {
+    const raw = sessionStorage.getItem(sessionKey);
+    if (raw && now - parseInt(raw, 10) < ttlMs) {
+      return true;
+    }
+    sessionStorage.setItem(sessionKey, String(now));
+  } catch {
+    if (sentKeysCache.has(dedupKey)) return true;
+    sentKeysCache.add(dedupKey);
+  }
+  return false;
+};
+
 export const dispatchSystemNotification = (
   title: string,
   options?: NotificationOptions

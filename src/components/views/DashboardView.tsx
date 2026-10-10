@@ -4,6 +4,8 @@ import { TodayTaskList } from '../dashboard/TodayTaskList';
 import { DashboardSTLPractice } from '../dashboard/DashboardSTLPractice';
 import { QuickAnalytics } from '../dashboard/QuickAnalytics';
 import { QuoteCard } from '../common/QuoteCard';
+import { AdaptiveRecoveryBanner } from '../dashboard/AdaptiveRecoveryBanner';
+import { InterviewReadinessWidget } from '../dashboard/InterviewReadinessWidget';
 import { Problem } from '../../types/dsa';
 
 interface DashboardViewProps {
@@ -19,8 +21,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 }) => {
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
+      {/* Feature 1: Adaptive Recovery Banner */}
+      <AdaptiveRecoveryBanner />
+
       {/* 4 Core Metric Cards */}
       <MetricCards />
+
+      {/* Feature 8: Interview Readiness Meter */}
+      <InterviewReadinessWidget />
 
       {/* Main Content Grid: Left 2 Cols (Tasks + STL), Right Col (Quote + Stats) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

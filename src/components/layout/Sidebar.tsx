@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   LayoutDashboard,
   CalendarCheck2,
@@ -11,6 +10,10 @@ import {
   ChevronRight,
   Code2,
   Flame,
+  BrainCircuit,
+  Target,
+  FileSearch,
+  Trophy,
 } from 'lucide-react';
 import { useDSA } from '../../context/DSAContext';
 import { ActiveTab } from '../../types/dsa';
@@ -28,7 +31,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   mobileOpen,
   onCloseMobile,
 }) => {
-  const { activeTab, setActiveTab, stats, stlState } = useDSA();
+  const { activeTab, setActiveTab, stats, stlState, activeFocusSession, milestones, weakestTopics } = useDSA();
+
+  const unlockedMilestones = milestones.filter((m) => m.isUnlocked).length;
 
   const navItems: { id: ActiveTab; label: string; icon: React.ReactNode; badge?: number | string }[] = [
     {
@@ -43,22 +48,45 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badge: stats.todayPlanAssignedCount > 0 ? `${stats.todaySolvedCount}/${stats.todayPlanAssignedCount}` : undefined,
     },
     {
-      id: 'question-bank',
-      label: 'Question Bank',
-      icon: <Database size={20} />,
-      badge: stats.totalProblemsCount,
+      id: 'focus-mode',
+      label: 'Focus Mode',
+      icon: <Target size={20} />,
+      badge: activeFocusSession ? 'LIVE' : undefined,
     },
     {
-      id: 'stl-practice',
-      label: 'STL Practice',
-      icon: <Timer size={20} />,
-      badge: stlState.isCompleted ? '✓' : '30m',
+      id: 'weakness-map',
+      label: 'Weakness Map',
+      icon: <BrainCircuit size={20} />,
+      badge: weakestTopics.length > 0 ? `${weakestTopics.length} weak` : undefined,
     },
     {
       id: 'revision-queue',
       label: 'Revision Queue',
       icon: <Repeat2 size={20} />,
       badge: stats.revisionQueueCount > 0 ? stats.revisionQueueCount : undefined,
+    },
+    {
+      id: 'stl-practice',
+      label: 'STL Arena',
+      icon: <Timer size={20} />,
+      badge: stlState.isCompleted ? '✓' : '30m',
+    },
+    {
+      id: 'question-bank',
+      label: 'Question Bank',
+      icon: <Database size={20} />,
+      badge: stats.totalProblemsCount,
+    },
+    {
+      id: 'weekly-autopsy',
+      label: 'Weekly Autopsy',
+      icon: <FileSearch size={20} />,
+    },
+    {
+      id: 'milestones',
+      label: 'Milestones',
+      icon: <Trophy size={20} />,
+      badge: `${unlockedMilestones}/${milestones.length}`,
     },
     {
       id: 'analytics',

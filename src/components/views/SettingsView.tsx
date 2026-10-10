@@ -222,6 +222,52 @@ export const SettingsView: React.FC = () => {
         </div>
       </div>
 
+      {/* Feature 3: Configurable Spaced Repetition Intervals */}
+      <div className="card-soft p-6 space-y-5">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="flex items-center space-x-2.5">
+            <RotateCcw size={18} className="text-purple-500" />
+            <h3 className="font-bold text-sm text-slate-800">
+              Spaced Repetition Review Schedule
+            </h3>
+          </div>
+        </div>
+
+        <p className="text-xs text-slate-500 leading-relaxed">
+          Configure the review intervals (in days) applied following successful recall attempts.
+          When you solve a problem independently during revision, it advances to the next interval stage.
+        </p>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[0, 1, 2, 3].map((stageIdx) => {
+            const intervals = settings.spacedRepetitionIntervals || [1, 3, 7, 14];
+            const days = intervals[stageIdx] ?? [1, 3, 7, 14][stageIdx];
+            return (
+              <div key={stageIdx} className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                  Stage {stageIdx + 1}
+                </span>
+                <div className="flex items-center space-x-1">
+                  <input
+                    type="number"
+                    min="1"
+                    max="90"
+                    value={days}
+                    onChange={(e) => {
+                      const nextIntervals = [...intervals];
+                      nextIntervals[stageIdx] = Math.max(1, parseInt(e.target.value, 10) || 1);
+                      updateSettings({ spacedRepetitionIntervals: nextIntervals });
+                    }}
+                    className="w-16 text-xs font-extrabold p-1.5 border border-slate-300 rounded-lg bg-white"
+                  />
+                  <span className="text-xs text-slate-600 font-medium">Days</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* 2. Notification Preferences & Background Limitations */}
       <div className="card-soft p-6 space-y-5">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">

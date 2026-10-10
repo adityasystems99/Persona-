@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from 'react';
 import confetti from 'canvas-confetti';
 import { User } from '@supabase/supabase-js';
 import {
@@ -13,6 +21,13 @@ import {
   ActiveTab,
   Difficulty,
   Platform,
+  STLExercise,
+  FocusSession,
+  Milestone,
+  RescheduleEvent,
+  TopicMasteryStats,
+  ReadinessBreakdown,
+  NotificationType,
 } from '../types/dsa';
 import {
   loadStoredProblems,
@@ -29,14 +44,26 @@ import {
   saveStoredStudyLogs,
   loadStoredNotifications,
   saveStoredNotifications,
+  loadStoredSTLExercises,
+  saveStoredSTLExercises,
+  loadStoredFocusSessions,
+  saveStoredFocusSessions,
+  loadStoredActiveFocus,
+  saveStoredActiveFocus,
+  loadStoredMilestones,
+  saveStoredMilestones,
+  loadStoredRescheduleEvents,
+  saveStoredRescheduleEvents,
   getLastHourlyReminderTimestamp,
   setLastHourlyReminderTimestamp,
   clearAllAlgoPulseData,
+  ActiveFocusState,
 } from '../utils/storage';
 import { soundFx } from '../utils/audio';
 import {
   dispatchSystemNotification,
   isWithinStudyWindow,
+  hasNotificationBeenDispatchedRecently,
 } from '../utils/notifications';
 import {
   INITIAL_PROBLEMS,
@@ -46,6 +73,14 @@ import {
   getTodayDateString,
 } from '../data/initialData';
 import { INITIAL_STL_TOPICS } from '../data/stlTopics';
+import { INITIAL_STL_EXERCISES } from '../data/stlExercises';
+import { INITIAL_MILESTONES } from '../data/milestonesData';
+import {
+  computeTopicMasteryMap,
+  computeInterviewReadiness,
+  computeWeeklyAutopsy,
+  calculateNextSpacedRepetitionDate,
+} from '../utils/intelligence';
 import {
   supabase,
   isSupabaseConfigured,
@@ -56,6 +91,10 @@ import {
   syncSTLSessionToCloud,
   syncSettingsToCloud,
   syncStudyLogToCloud,
+  syncFocusSessionToCloud,
+  syncSTLExerciseToCloud,
+  syncMilestoneToCloud,
+  syncRescheduleEventToCloud,
 } from '../lib/supabase';
 
 interface DSAContextType {
@@ -100,7 +139,7 @@ interface DSAContextType {
   // Plan actions
   updateDailyPlan: (updates: Partial<DailyPlan>) => void;
 
-  // STL actions
+  // STL actions & Exercises (Feature 4)
   startSTLTimer: () => void;
   pauseSTLTimer: () => void;
   resetSTLTimer: () => void;
@@ -108,8 +147,11 @@ interface DSAContextType {
   updateSTLState: (updates: Partial<STLPracticeState>) => void;
   toggleSTLTopicComplete: (topicId: string) => void;
   markSTLComplete: () => void;
+  stlExercises: STLExercise[];
+  toggleSTLExerciseComplete: (exerciseId: string, userCode?: string) => void;
+  updateSTLExerciseCode: (exerciseId: string, userCode: string) => void;
 
-  // Revision actions
+  // Revision & Spaced Repetition (Feature 3)
   scheduleRevision: (
     problemId: string,
     scheduledDate: string,
@@ -117,14 +159,60 @@ interface DSAContextType {
     patternLearned?: string
   ) => void;
   logRevisionAttempt: (problemId: string, success: boolean, notes: string) => void;
+  logSpacedRepetitionOutcome: (
+    problemId: string,
+    outcome: 'success' | 'hints' | 'failed',
+    notes: string
+  ) => void;
   removeRevision: (problemId: string) => void;
+  spacedRepetitionQueue: {
+    overdue: Problem[];
+    dueToday: Problem[];
+    upcoming: Problem[];
+  };
 
-  // Settings & alerts
+  // Focus Mode (Feature 5)
+  focusSessions: FocusSession[];
+  activeFocusSession: ActiveFocusState | null;
+  startFocusSession: (problem: Problem) => void;
+  pauseFocusSession: () => void;
+  resumeFocusSession: () => void;
+  recordFocusHint: (notes?: string) => void;
+  recordFocusMistake: (mistakeText: string) => void;
+  finishFocusSession: (solvedStatus: ProblemStatus, approachNotes?: string) => void;
+  cancelFocusSession: () => void;
+
+  // Adaptive Recovery Engine (Feature 1)
+  rescheduleEvents: RescheduleEvent[];
+  incompleteTasks: Problem[];
+  carryOverTasksToToday: (problemIds: string[]) => void;
+  rescheduleTaskDate: (problemId: string, newDate: string, reason?: string) => void;
+  skipTaskWithReason: (problemId: string, reason: string) => void;
+  retainTaskInQueue: (problemId: string) => void;
+  recalculateDailyTargets: () => void;
+
+  // Weakness Intelligence Map (Feature 2)
+  topicMasteryMap: TopicMasteryStats[];
+  weakestTopics: TopicMasteryStats[];
+  recommendedRevisionProblems: Problem[];
+
+  // Interview Readiness Meter (Feature 8)
+  readinessBreakdown: ReadinessBreakdown;
+
+  // Weekly Performance Autopsy (Feature 6)
+  getWeeklyAutopsyData: (offsetWeeks?: number) => ReturnType<typeof computeWeeklyAutopsy>;
+
+  // Proof-of-Skill Milestones (Feature 7)
+  milestones: Milestone[];
+  checkMilestoneProgress: () => void;
+
+  // Settings & alerts (Feature 9)
   updateSettings: (updates: Partial<AccountabilitySettings>) => void;
   addNotification: (
     title: string,
     message: string,
-    type?: AppNotification['type']
+    type?: NotificationType,
+    dedupKey?: string
   ) => void;
   markNotificationRead: (id: string) => void;
   clearNotifications: () => void;
@@ -155,13 +243,19 @@ interface DSAContextType {
 const DSAContext = createContext<DSAContextType | null>(null);
 
 export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // State Initialization from localStorage
   const [problems, setProblems] = useState<Problem[]>(loadStoredProblems);
   const [dailyPlan, setDailyPlan] = useState<DailyPlan>(loadStoredDailyPlan);
   const [stlState, setStlState] = useState<STLPracticeState>(loadStoredSTLState);
   const [stlTopics, setStlTopics] = useState<STLTopicItem[]>(loadStoredSTLTopics);
+  const [stlExercises, setStlExercises] = useState<STLExercise[]>(loadStoredSTLExercises);
   const [settings, setSettings] = useState<AccountabilitySettings>(loadStoredSettings);
   const [studyLogs, setStudyLogs] = useState<StudyDayLog[]>(loadStoredStudyLogs);
   const [notifications, setNotifications] = useState<AppNotification[]>(loadStoredNotifications);
+  const [focusSessions, setFocusSessions] = useState<FocusSession[]>(loadStoredFocusSessions);
+  const [activeFocusSession, setActiveFocusSession] = useState<ActiveFocusState | null>(loadStoredActiveFocus);
+  const [milestones, setMilestones] = useState<Milestone[]>(loadStoredMilestones);
+  const [rescheduleEvents, setRescheduleEvents] = useState<RescheduleEvent[]>(loadStoredRescheduleEvents);
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
 
   // Supabase Auth State
@@ -215,13 +309,18 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (cloudData.studyLogs && cloudData.studyLogs.length > 0) {
       setStudyLogs(cloudData.studyLogs);
     }
+    if (cloudData.focusSessions && cloudData.focusSessions.length > 0) {
+      setFocusSessions(cloudData.focusSessions);
+    }
+    if (cloudData.rescheduleEvents && cloudData.rescheduleEvents.length > 0) {
+      setRescheduleEvents(cloudData.rescheduleEvents);
+    }
   };
 
   const syncLocalDataToCloud = async () => {
     if (!currentUser) return;
     const userId = currentUser.id;
 
-    // Upload all problems
     for (const p of problems) {
       await syncProblemToCloud(p, userId);
     }
@@ -230,6 +329,18 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await syncSettingsToCloud(settings, userId);
     for (const l of studyLogs) {
       await syncStudyLogToCloud(l, userId);
+    }
+    for (const f of focusSessions) {
+      await syncFocusSessionToCloud(f, userId);
+    }
+    for (const e of stlExercises) {
+      await syncSTLExerciseToCloud(e, userId);
+    }
+    for (const m of milestones) {
+      await syncMilestoneToCloud(m, userId);
+    }
+    for (const r of rescheduleEvents) {
+      await syncRescheduleEventToCloud(r, userId);
     }
   };
 
@@ -251,6 +362,10 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [stlTopics]);
 
   useEffect(() => {
+    saveStoredSTLExercises(stlExercises);
+  }, [stlExercises]);
+
+  useEffect(() => {
     saveStoredSettings(settings);
   }, [settings]);
 
@@ -262,14 +377,48 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     saveStoredNotifications(notifications);
   }, [notifications]);
 
-  // Add Notification helper
+  useEffect(() => {
+    saveStoredFocusSessions(focusSessions);
+  }, [focusSessions]);
+
+  useEffect(() => {
+    saveStoredActiveFocus(activeFocusSession);
+  }, [activeFocusSession]);
+
+  useEffect(() => {
+    saveStoredMilestones(milestones);
+  }, [milestones]);
+
+  useEffect(() => {
+    saveStoredRescheduleEvents(rescheduleEvents);
+  }, [rescheduleEvents]);
+
+  // Feature 9: Notification Intelligence & Deduplication
   const addNotification = useCallback(
-    (title: string, message: string, type: AppNotification['type'] = 'info') => {
+    (
+      title: string,
+      message: string,
+      type: NotificationType = 'info',
+      dedupKey?: string
+    ) => {
+      // Respect quiet hours / study window unless it's a critical milestone or focus event
+      if (type === 'reminder') {
+        if (!isWithinStudyWindow(settings.studyStartTime, settings.studyEndTime)) {
+          return;
+        }
+      }
+
+      // Deduplicate if needed
+      if (dedupKey && hasNotificationBeenDispatchedRecently(dedupKey, 3600000)) {
+        return;
+      }
+
       const newNotif: AppNotification = {
         id: `notif-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
         title,
         message,
         timestamp: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
         type,
         read: false,
       };
@@ -281,126 +430,15 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
 
       if (settings.soundEnabled) {
-        if (type === 'success' || type === 'stl') {
+        if (type === 'success' || type === 'stl' || type === 'milestone') {
           soundFx.playFanfare();
         } else {
           soundFx.playChime();
         }
       }
     },
-    [settings.browserNotificationsEnabled, settings.soundEnabled]
+    [settings.studyStartTime, settings.studyEndTime, settings.browserNotificationsEnabled, settings.soundEnabled]
   );
-
-  // STL Timer Countdown Effect
-  const stlStateRef = useRef(stlState);
-  stlStateRef.current = stlState;
-
-  useEffect(() => {
-    if (!stlState.isRunning) return;
-
-    const interval = setInterval(() => {
-      setStlState((curr) => {
-        if (!curr.isRunning) return curr;
-
-        const nextRemaining = curr.remainingSeconds - 1;
-        if (nextRemaining <= 0) {
-          clearInterval(interval);
-          if (settings.soundEnabled) {
-            soundFx.playFanfare();
-          }
-
-          try {
-            confetti({
-              particleCount: 100,
-              spread: 70,
-              origin: { y: 0.6 },
-            });
-          } catch {}
-
-          addNotification(
-            '30-Min STL Session Completed!',
-            'Outstanding dedication! You wrapped up your daily 30-minute C++ STL practice session.',
-            'stl'
-          );
-
-          const updatedPlan = { ...dailyPlan, stlCompleted: true };
-          setDailyPlan(updatedPlan);
-          if (currentUser) syncDailyPlanToCloud(updatedPlan, currentUser.id);
-
-          updateTodayStudyLog({ stlMinutes: 30, stlCompleted: true });
-
-          const completedState = {
-            ...curr,
-            remainingSeconds: 0,
-            isRunning: false,
-            isCompleted: true,
-            completedAt: new Date().toISOString(),
-            lastTickTimestamp: Date.now(),
-          };
-          if (currentUser) syncSTLSessionToCloud(completedState, currentUser.id);
-
-          return completedState;
-        }
-
-        return {
-          ...curr,
-          remainingSeconds: nextRemaining,
-          lastTickTimestamp: Date.now(),
-        };
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [stlState.isRunning, settings.soundEnabled, addNotification, currentUser, dailyPlan]);
-
-  // Hourly Accountability & Reminder Runner
-  useEffect(() => {
-    if (!settings.hourlyRemindersEnabled) return;
-
-    const checkReminders = () => {
-      const nowMs = Date.now();
-      const lastCheck = getLastHourlyReminderTimestamp();
-      const intervalMs = settings.reminderIntervalMinutes * 60 * 1000;
-
-      if (nowMs - lastCheck < intervalMs) return;
-
-      if (!isWithinStudyWindow(settings.studyStartTime, settings.studyEndTime)) {
-        return;
-      }
-
-      setLastHourlyReminderTimestamp(nowMs);
-
-      const todayProblems = problems.filter((p) => p.inTodayPlan);
-      const solvedToday = todayProblems.filter(
-        (p) => p.status === 'Solved Independently' || p.status === 'Solved with Hints'
-      );
-      const pendingCount = todayProblems.length - solvedToday.length;
-
-      if (settings.stlReminderEnabled && !stlStateRef.current.isCompleted) {
-        addNotification(
-          'STL Practice Pending',
-          '30-minute C++ STL session is still pending today! Take 30 mins to drill containers & iterators.',
-          'reminder'
-        );
-      } else if (pendingCount > 0) {
-        addNotification(
-          'Hourly DSA Check-in',
-          `You've solved ${solvedToday.length} of ${todayProblems.length} planned problems today. ${pendingCount} remaining. Keep up the focus!`,
-          'reminder'
-        );
-      } else if (todayProblems.length > 0) {
-        addNotification(
-          'Daily Target Achieved!',
-          'All assigned DSA problems for today are completed! Great work.',
-          'success'
-        );
-      }
-    };
-
-    checkReminders();
-    const reminderInterval = setInterval(checkReminders, 60000);
-    return () => clearInterval(reminderInterval);
-  }, [settings, problems, addNotification]);
 
   // Study log updater helper
   const updateTodayStudyLog = (diff: Partial<StudyDayLog>) => {
@@ -435,6 +473,203 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+  // Feature 7: Proof-of-Skill Milestones Evaluation (Idempotent)
+  const checkMilestoneProgress = useCallback(() => {
+    setMilestones((prev) => {
+      let changed = false;
+      const updated = prev.map((m) => {
+        if (m.isUnlocked) return m;
+
+        let shouldUnlock = false;
+        let nextVal = m.currentValue;
+
+        if (m.id === 'first_blood') {
+          const count = problems.filter((p) => p.solvedIndependently).length;
+          nextVal = count;
+          shouldUnlock = count >= 1;
+        } else if (m.id === 'memory_architect') {
+          const successRev = problems.some((p) =>
+            p.revisionHistory?.some((r) => r.success)
+          );
+          nextVal = successRev ? 1 : 0;
+          shouldUnlock = successRev;
+        } else if (m.id === 'stl_marathoner') {
+          const count = studyLogs.filter((l) => l.stlCompleted).length;
+          nextVal = count;
+          shouldUnlock = count >= 7;
+        } else if (m.id === 'topic_champion') {
+          const topicCounts: Record<string, number> = {};
+          problems
+            .filter((p) => p.solvedIndependently)
+            .forEach((p) => {
+              topicCounts[p.topic] = (topicCounts[p.topic] || 0) + 1;
+            });
+          const maxTopic = Math.max(0, ...Object.values(topicCounts));
+          nextVal = maxTopic;
+          shouldUnlock = maxTopic >= 3;
+        } else if (m.id === 'complexity_analyst') {
+          const analyzed = problems.filter(
+            (p) =>
+              Boolean(p.timeComplexity && p.timeComplexity.trim() !== '') &&
+              Boolean(p.spaceComplexity && p.spaceComplexity.trim() !== '')
+          ).length;
+          nextVal = analyzed;
+          shouldUnlock = analyzed >= 5;
+        } else if (m.id === 'resilient_recovery') {
+          const recovered = rescheduleEvents.some((r) => r.action === 'carry_over');
+          nextVal = recovered ? 1 : 0;
+          shouldUnlock = recovered;
+        } else if (m.id === 'stl_drill_master') {
+          const completedExercises = stlExercises.filter((e) => e.isCompleted).length;
+          nextVal = completedExercises;
+          shouldUnlock = completedExercises >= 5;
+        } else if (m.id === 'deep_focus') {
+          const hasDeep = focusSessions.some((f) => f.activeSeconds >= 1500); // 25 mins
+          nextVal = hasDeep ? 1 : 0;
+          shouldUnlock = hasDeep;
+        }
+
+        if (shouldUnlock && !m.isUnlocked) {
+          changed = true;
+          try {
+            confetti({ particleCount: 120, spread: 80 });
+          } catch {}
+          addNotification(
+            `Milestone Unlocked: ${m.title}!`,
+            m.description,
+            'milestone',
+            `milestone-${m.id}`
+          );
+
+          const unlockedMilestone = {
+            ...m,
+            currentValue: nextVal,
+            isUnlocked: true,
+            unlockedAt: new Date().toISOString(),
+          };
+          if (currentUser) syncMilestoneToCloud(unlockedMilestone, currentUser.id);
+          return unlockedMilestone;
+        }
+
+        if (nextVal !== m.currentValue) {
+          changed = true;
+          return { ...m, currentValue: nextVal };
+        }
+
+        return m;
+      });
+
+      return changed ? updated : prev;
+    });
+  }, [problems, studyLogs, rescheduleEvents, stlExercises, focusSessions, addNotification, currentUser]);
+
+  // STL Timer Countdown Effect
+  const stlStateRef = useRef(stlState);
+  stlStateRef.current = stlState;
+
+  useEffect(() => {
+    if (!stlState.isRunning) return;
+
+    const interval = setInterval(() => {
+      setStlState((curr) => {
+        if (!curr.isRunning) return curr;
+
+        const nextRemaining = curr.remainingSeconds - 1;
+        if (nextRemaining <= 0) {
+          clearInterval(interval);
+          if (settings.soundEnabled) soundFx.playFanfare();
+
+          try {
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+          } catch {}
+
+          addNotification(
+            '30-Min STL Session Completed!',
+            'Outstanding dedication! You wrapped up your daily 30-minute C++ STL practice session.',
+            'stl'
+          );
+
+          const updatedPlan = { ...dailyPlan, stlCompleted: true };
+          setDailyPlan(updatedPlan);
+          if (currentUser) syncDailyPlanToCloud(updatedPlan, currentUser.id);
+
+          updateTodayStudyLog({ stlMinutes: 30, stlCompleted: true });
+
+          const completedState = {
+            ...curr,
+            remainingSeconds: 0,
+            isRunning: false,
+            isCompleted: true,
+            completedAt: new Date().toISOString(),
+            lastTickTimestamp: Date.now(),
+          };
+          if (currentUser) syncSTLSessionToCloud(completedState, currentUser.id);
+
+          // Evaluate STL Milestone
+          checkMilestoneProgress();
+          return completedState;
+        }
+
+        return {
+          ...curr,
+          remainingSeconds: nextRemaining,
+          lastTickTimestamp: Date.now(),
+        };
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [stlState.isRunning, settings.soundEnabled, addNotification, currentUser, dailyPlan, checkMilestoneProgress]);
+
+  // Hourly Accountability & Reminder Runner
+  useEffect(() => {
+    if (!settings.hourlyRemindersEnabled) return;
+
+    const checkReminders = () => {
+      const nowMs = Date.now();
+      const lastCheck = getLastHourlyReminderTimestamp();
+      const intervalMs = settings.reminderIntervalMinutes * 60 * 1000;
+
+      if (nowMs - lastCheck < intervalMs) return;
+      if (!isWithinStudyWindow(settings.studyStartTime, settings.studyEndTime)) return;
+
+      setLastHourlyReminderTimestamp(nowMs);
+
+      const todayProblems = problems.filter((p) => p.inTodayPlan);
+      const solvedToday = todayProblems.filter(
+        (p) => p.status === 'Solved Independently' || p.status === 'Solved with Hints'
+      );
+      const pendingCount = todayProblems.length - solvedToday.length;
+
+      if (settings.stlReminderEnabled && !stlStateRef.current.isCompleted) {
+        addNotification(
+          'STL Practice Pending',
+          '30-minute C++ STL session is still pending today! Take 30 mins to drill containers & iterators.',
+          'reminder',
+          `stl-pending-${todayStr}`
+        );
+      } else if (pendingCount > 0) {
+        addNotification(
+          'Hourly DSA Check-in',
+          `You've solved ${solvedToday.length} of ${todayProblems.length} planned problems today. ${pendingCount} remaining. Keep up the focus!`,
+          'reminder',
+          `hourly-${Math.floor(nowMs / 3600000)}`
+        );
+      } else if (todayProblems.length > 0) {
+        addNotification(
+          'Daily Target Achieved!',
+          'All assigned DSA problems for today are completed! Great work.',
+          'success',
+          `target-achieved-${todayStr}`
+        );
+      }
+    };
+
+    checkReminders();
+    const reminderInterval = setInterval(checkReminders, 60000);
+    return () => clearInterval(reminderInterval);
+  }, [settings, problems, addNotification, todayStr]);
+
   // Problem actions
   const addProblem = (data: Partial<Problem>): Problem => {
     const todayProblems = problems.filter((p) => p.inTodayPlan);
@@ -460,7 +695,12 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       revisionScheduledDate: data.revisionScheduledDate,
       mistakes: data.mistakes,
       patternLearned: data.patternLearned,
+      hintsUsed: data.hintsUsed || 0,
+      hintsNotes: data.hintsNotes || '',
+      focusTimeSeconds: data.focusTimeSeconds || 0,
+      spacedRepetitionStage: 0,
       revisionHistory: [],
+      rescheduleHistory: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -468,6 +708,7 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setProblems((prev) => [newProblem, ...prev]);
     if (currentUser) syncProblemToCloud(newProblem, currentUser.id);
     addNotification('Problem Added', `"${newProblem.title}" added to question bank.`, 'info');
+    setTimeout(checkMilestoneProgress, 100);
     return newProblem;
   };
 
@@ -484,6 +725,7 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return updated;
       })
     );
+    setTimeout(checkMilestoneProgress, 100);
   };
 
   const deleteProblem = (id: string) => {
@@ -498,14 +740,14 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     timeSpent?: number,
     solvedIndependently?: boolean
   ) => {
+    const isSolvedNow =
+      newStatus === 'Solved Independently' || newStatus === 'Solved with Hints';
+    const isIndependent =
+      solvedIndependently ?? (newStatus === 'Solved Independently');
+
     setProblems((prev) =>
       prev.map((p) => {
         if (p.id !== id) return p;
-
-        const isSolvedNow =
-          newStatus === 'Solved Independently' || newStatus === 'Solved with Hints';
-        const isIndependent =
-          solvedIndependently ?? (newStatus === 'Solved Independently');
 
         const updated: Problem = {
           ...p,
@@ -514,6 +756,7 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           timeSpentMinutes: timeSpent !== undefined ? timeSpent : (p.timeSpentMinutes || 20),
           attempts: p.attempts ? p.attempts + (isSolvedNow ? 0 : 1) : 1,
           completionTime: isSolvedNow ? new Date().toISOString() : p.completionTime,
+          completedAt: isSolvedNow ? (p.completedAt || new Date().toISOString()) : p.completedAt,
           needsRevision:
             newStatus === 'Solved with Hints' || newStatus === 'Needs Revision'
               ? true
@@ -540,6 +783,8 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         'info'
       );
     }
+
+    setTimeout(checkMilestoneProgress, 200);
   };
 
   const toggleInTodayPlan = (id: string) => {
@@ -612,6 +857,7 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       orderInPlan: 0,
       needsRevision: false,
       revisionHistory: [],
+      rescheduleHistory: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }));
@@ -733,9 +979,42 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     updateTodayStudyLog({ stlMinutes: 30, stlCompleted: true });
     addNotification('STL Session Marked Complete', 'Logged 30-min STL practice for today.', 'stl');
+    setTimeout(checkMilestoneProgress, 200);
   };
 
-  // Revision actions
+  // Feature 4: STL Exercises Actions
+  const toggleSTLExerciseComplete = (exerciseId: string, userCode?: string) => {
+    setStlExercises((prev) =>
+      prev.map((ex) => {
+        if (ex.id !== exerciseId) return ex;
+        const nextStatus = !ex.isCompleted;
+        const updated = {
+          ...ex,
+          isCompleted: nextStatus,
+          completedAt: nextStatus ? new Date().toISOString() : undefined,
+          userCode: userCode !== undefined ? userCode : ex.userCode,
+        };
+        if (currentUser) syncSTLExerciseToCloud(updated, currentUser.id);
+        return updated;
+      })
+    );
+    if (settings.soundEnabled) soundFx.playTick();
+    addNotification('Exercise Progress Saved', 'STL arena exercise status updated.', 'info');
+    setTimeout(checkMilestoneProgress, 200);
+  };
+
+  const updateSTLExerciseCode = (exerciseId: string, userCode: string) => {
+    setStlExercises((prev) =>
+      prev.map((ex) => {
+        if (ex.id !== exerciseId) return ex;
+        const updated = { ...ex, userCode };
+        if (currentUser) syncSTLExerciseToCloud(updated, currentUser.id);
+        return updated;
+      })
+    );
+  };
+
+  // Feature 3: Smart Spaced Repetition Actions
   const scheduleRevision = (
     problemId: string,
     scheduledDate: string,
@@ -761,21 +1040,45 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const logRevisionAttempt = (problemId: string, success: boolean, notes: string) => {
+    logSpacedRepetitionOutcome(problemId, success ? 'success' : 'failed', notes);
+  };
+
+  const logSpacedRepetitionOutcome = (
+    problemId: string,
+    outcome: 'success' | 'hints' | 'failed',
+    notes: string
+  ) => {
+    const target = problems.find((p) => p.id === problemId);
+    if (!target) return;
+
+    const currentStage = target.spacedRepetitionStage || 0;
+    const intervals = settings.spacedRepetitionIntervals || [1, 3, 7, 14];
+    const { nextStage, nextScheduledDate } = calculateNextSpacedRepetitionDate(
+      currentStage,
+      outcome,
+      intervals
+    );
+
+    const newLog = {
+      id: `rev-${Date.now()}`,
+      date: todayStr,
+      success: outcome === 'success',
+      notes,
+    };
+
     setProblems((prev) =>
       prev.map((p) => {
         if (p.id !== problemId) return p;
-        const newLog = {
-          id: `rev-${Date.now()}`,
-          date: todayStr,
-          success,
-          notes,
-        };
-        const updated = {
+        const updated: Problem = {
           ...p,
           revisionHistory: [newLog, ...p.revisionHistory],
-          needsRevision: !success,
-          status: (success ? 'Solved Independently' : p.status) as ProblemStatus,
-          solvedIndependently: success ? true : p.solvedIndependently,
+          spacedRepetitionStage: nextStage,
+          lastRevisionOutcome: outcome,
+          lastRevisionDate: todayStr,
+          needsRevision: outcome !== 'success' || nextStage < intervals.length,
+          revisionScheduledDate: nextScheduledDate,
+          status: (outcome === 'success' ? 'Solved Independently' : p.status) as ProblemStatus,
+          solvedIndependently: outcome === 'success' ? true : p.solvedIndependently,
           updatedAt: new Date().toISOString(),
         };
         if (currentUser) syncProblemToCloud(updated, currentUser.id);
@@ -783,16 +1086,31 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       })
     );
 
-    if (success) {
+    if (outcome === 'success') {
       if (settings.soundEnabled) soundFx.playFanfare();
+      try {
+        confetti({ particleCount: 70, spread: 50 });
+      } catch {}
       addNotification(
         'Revision Mastered!',
-        'You solved the revised problem independently! Marked resolved.',
+        `Problem intuition solidified! Next interval extended to stage ${nextStage} (due ${nextScheduledDate}).`,
         'success'
       );
+    } else if (outcome === 'hints') {
+      addNotification(
+        'Revision Solved with Hints',
+        `Retained shorter review interval. Re-testing on ${nextScheduledDate}.`,
+        'info'
+      );
     } else {
-      addNotification('Revision Logged', 'Mistakes noted. Keep it in the revision queue.', 'info');
+      addNotification(
+        'Revision Failed — Priority Queued',
+        `Mistakes noted. Re-queued for tomorrow (${nextScheduledDate}) for immediate reinforcement.`,
+        'warning'
+      );
     }
+
+    setTimeout(checkMilestoneProgress, 200);
   };
 
   const removeRevision = (problemId: string) => {
@@ -810,6 +1128,400 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
     addNotification('Removed from Revision Queue', 'Problem marked resolved.', 'info');
   };
+
+  // Feature 5: Focus Mode Runner & Timing Engine (Wall-Clock Based)
+  useEffect(() => {
+    if (!activeFocusSession || activeFocusSession.status !== 'running') return;
+
+    const interval = setInterval(() => {
+      setActiveFocusSession((curr) => {
+        if (!curr || curr.status !== 'running') return curr;
+        const now = Date.now();
+        const deltaSeconds = Math.max(1, Math.round((now - curr.lastStateTimestamp) / 1000));
+        return {
+          ...curr,
+          accumulatedFocusSeconds: curr.accumulatedFocusSeconds + deltaSeconds,
+          lastStateTimestamp: now,
+        };
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [activeFocusSession?.status]);
+
+  const startFocusSession = (problem: Problem) => {
+    const session: ActiveFocusState = {
+      problemId: problem.id,
+      problemTitle: problem.title,
+      sessionStartTime: Date.now(),
+      accumulatedFocusSeconds: 0,
+      accumulatedBreakSeconds: 0,
+      lastStateTimestamp: Date.now(),
+      status: 'running',
+      hintsUsed: 0,
+      hintNotes: '',
+      mistakesRecorded: '',
+    };
+    setActiveFocusSession(session);
+    setActiveTab('focus-mode');
+    if (settings.soundEnabled) soundFx.playTick();
+    addNotification('Focus Mode Started', `Immersion mode active for "${problem.title}".`, 'info');
+  };
+
+  const pauseFocusSession = () => {
+    if (!activeFocusSession || activeFocusSession.status !== 'running') return;
+    const now = Date.now();
+    const deltaSeconds = Math.max(0, Math.round((now - activeFocusSession.lastStateTimestamp) / 1000));
+    setActiveFocusSession({
+      ...activeFocusSession,
+      status: 'paused',
+      accumulatedFocusSeconds: activeFocusSession.accumulatedFocusSeconds + deltaSeconds,
+      lastStateTimestamp: now,
+    });
+    if (settings.soundEnabled) soundFx.playTick();
+  };
+
+  const resumeFocusSession = () => {
+    if (!activeFocusSession || activeFocusSession.status !== 'paused') return;
+    const now = Date.now();
+    const breakDelta = Math.max(0, Math.round((now - activeFocusSession.lastStateTimestamp) / 1000));
+    setActiveFocusSession({
+      ...activeFocusSession,
+      status: 'running',
+      accumulatedBreakSeconds: activeFocusSession.accumulatedBreakSeconds + breakDelta,
+      lastStateTimestamp: now,
+    });
+    if (settings.soundEnabled) soundFx.playTick();
+  };
+
+  const recordFocusHint = (notes?: string) => {
+    if (!activeFocusSession) return;
+    setActiveFocusSession((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        hintsUsed: prev.hintsUsed + 1,
+        hintNotes: notes ? (prev.hintNotes ? `${prev.hintNotes}\n• ${notes}` : `• ${notes}`) : prev.hintNotes,
+      };
+    });
+    addNotification('Hint Logged', 'Hint counter incremented for this focus block.', 'info');
+  };
+
+  const recordFocusMistake = (mistakeText: string) => {
+    if (!activeFocusSession) return;
+    setActiveFocusSession((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        mistakesRecorded: prev.mistakesRecorded
+          ? `${prev.mistakesRecorded}\n• ${mistakeText}`
+          : `• ${mistakeText}`,
+      };
+    });
+    addNotification('Mistake Tracked', 'Mistake logged for post-session autopsy.', 'info');
+  };
+
+  const finishFocusSession = (solvedStatus: ProblemStatus, approachNotes?: string) => {
+    if (!activeFocusSession) return;
+
+    const completedSession: FocusSession = {
+      id: `focus-${Date.now()}`,
+      problemId: activeFocusSession.problemId,
+      problemTitle: activeFocusSession.problemTitle,
+      startedAt: new Date(activeFocusSession.sessionStartTime).toISOString(),
+      endedAt: new Date().toISOString(),
+      activeSeconds: activeFocusSession.accumulatedFocusSeconds,
+      breakSeconds: activeFocusSession.accumulatedBreakSeconds,
+      hintsUsed: activeFocusSession.hintsUsed,
+      hintNotes: activeFocusSession.hintNotes,
+      mistakesRecorded: activeFocusSession.mistakesRecorded,
+      status: 'completed',
+    };
+
+    setFocusSessions((prev) => [completedSession, ...prev]);
+    if (currentUser) syncFocusSessionToCloud(completedSession, currentUser.id);
+
+    // Update Problem with telemetry
+    const minutes = Math.max(1, Math.round(activeFocusSession.accumulatedFocusSeconds / 60));
+    const isIndep = solvedStatus === 'Solved Independently';
+
+    setProblems((prev) =>
+      prev.map((p) => {
+        if (p.id !== activeFocusSession.problemId) return p;
+        const updated: Problem = {
+          ...p,
+          status: solvedStatus,
+          solvedIndependently: isIndep,
+          timeSpentMinutes: (p.timeSpentMinutes || 0) + minutes,
+          focusTimeSeconds: (p.focusTimeSeconds || 0) + activeFocusSession.accumulatedFocusSeconds,
+          hintsUsed: (p.hintsUsed || 0) + activeFocusSession.hintsUsed,
+          mistakes: activeFocusSession.mistakesRecorded
+            ? (p.mistakes ? `${p.mistakes}\n${activeFocusSession.mistakesRecorded}` : activeFocusSession.mistakesRecorded)
+            : p.mistakes,
+          approach: approachNotes || p.approach,
+          attempts: (p.attempts || 0) + 1,
+          completedAt: solvedStatus.startsWith('Solved') ? new Date().toISOString() : p.completedAt,
+          needsRevision: solvedStatus === 'Solved with Hints' || solvedStatus === 'Needs Revision',
+          revisionScheduledDate:
+            solvedStatus === 'Solved with Hints' || solvedStatus === 'Needs Revision'
+              ? todayStr
+              : p.revisionScheduledDate,
+          updatedAt: new Date().toISOString(),
+        };
+        if (currentUser) syncProblemToCloud(updated, currentUser.id);
+        return updated;
+      })
+    );
+
+    // Update Today's study log with DSA minutes
+    updateTodayStudyLog({
+      dsaMinutes: (studyLogs.find((l) => l.date === todayStr)?.dsaMinutes || 0) + minutes,
+    });
+
+    if (solvedStatus === 'Solved Independently') {
+      if (settings.soundEnabled) soundFx.playFanfare();
+      try {
+        confetti({ particleCount: 100, spread: 70 });
+      } catch {}
+      addNotification('Focus Session Conquered!', `Solved independently in ${minutes} minutes.`, 'success');
+    } else {
+      addNotification('Focus Session Concluded', `Logged ${minutes} min active study time.`, 'info');
+    }
+
+    setActiveFocusSession(null);
+    saveStoredActiveFocus(null);
+    setTimeout(checkMilestoneProgress, 200);
+  };
+
+  const cancelFocusSession = () => {
+    setActiveFocusSession(null);
+    saveStoredActiveFocus(null);
+    addNotification('Focus Session Abandoned', 'Session ended without saving progress.', 'info');
+  };
+
+  // Feature 1: Adaptive Recovery Engine Actions
+  const incompleteTasks = useMemo(() => {
+    return problems.filter((p) => {
+      const isNotSolved =
+        p.status === 'Not Started' ||
+        p.status === 'In Progress' ||
+        p.status === 'Needs Revision';
+      return isNotSolved && p.inTodayPlan;
+    });
+  }, [problems]);
+
+  const carryOverTasksToToday = (problemIds: string[]) => {
+    const todayAssigned = problems.filter((p) => p.inTodayPlan);
+    let orderCounter = todayAssigned.length;
+
+    const events: RescheduleEvent[] = [];
+
+    setProblems((prev) =>
+      prev.map((p) => {
+        if (!problemIds.includes(p.id)) return p;
+        orderCounter++;
+        const event: RescheduleEvent = {
+          id: `resched-${Date.now()}-${p.id}`,
+          problemId: p.id,
+          problemTitle: p.title,
+          date: todayStr,
+          action: 'carry_over',
+          previousDate: p.updatedAt.slice(0, 10),
+          targetDate: todayStr,
+          reason: 'Carried over via Adaptive Recovery Engine',
+        };
+        events.push(event);
+
+        const updated = {
+          ...p,
+          inTodayPlan: true,
+          orderInPlan: orderCounter,
+          rescheduleHistory: [...(p.rescheduleHistory || []), event],
+          updatedAt: new Date().toISOString(),
+        };
+        if (currentUser) syncProblemToCloud(updated, currentUser.id);
+        return updated;
+      })
+    );
+
+    setRescheduleEvents((prev) => [...events, ...prev]);
+    if (currentUser) {
+      events.forEach((ev) => syncRescheduleEventToCloud(ev, currentUser.id));
+    }
+
+    recalculateDailyTargets();
+    if (settings.soundEnabled) soundFx.playTick();
+    addNotification(
+      'Workload Carried Over',
+      `Carried ${problemIds.length} incomplete tasks into today's schedule. Daily targets re-indexed.`,
+      'recovery'
+    );
+    setTimeout(checkMilestoneProgress, 200);
+  };
+
+  const rescheduleTaskDate = (problemId: string, newDate: string, reason?: string) => {
+    const target = problems.find((p) => p.id === problemId);
+    if (!target) return;
+
+    const event: RescheduleEvent = {
+      id: `resched-${Date.now()}-${problemId}`,
+      problemId,
+      problemTitle: target.title,
+      date: todayStr,
+      action: 'reschedule',
+      previousDate: todayStr,
+      targetDate: newDate,
+      reason: reason || 'Postponed via Recovery Planner',
+    };
+
+    setProblems((prev) =>
+      prev.map((p) => {
+        if (p.id !== problemId) return p;
+        const updated = {
+          ...p,
+          inTodayPlan: newDate === todayStr,
+          revisionScheduledDate: newDate,
+          rescheduleHistory: [...(p.rescheduleHistory || []), event],
+          updatedAt: new Date().toISOString(),
+        };
+        if (currentUser) syncProblemToCloud(updated, currentUser.id);
+        return updated;
+      })
+    );
+
+    setRescheduleEvents((prev) => [event, ...prev]);
+    if (currentUser) syncRescheduleEventToCloud(event, currentUser.id);
+
+    recalculateDailyTargets();
+    addNotification('Task Rescheduled', `"${target.title}" deferred to ${newDate}.`, 'info');
+  };
+
+  const skipTaskWithReason = (problemId: string, reason: string) => {
+    const target = problems.find((p) => p.id === problemId);
+    if (!target) return;
+
+    const event: RescheduleEvent = {
+      id: `resched-${Date.now()}-${problemId}`,
+      problemId,
+      problemTitle: target.title,
+      date: todayStr,
+      action: 'skip',
+      reason,
+    };
+
+    setProblems((prev) =>
+      prev.map((p) => {
+        if (p.id !== problemId) return p;
+        const updated = {
+          ...p,
+          inTodayPlan: false,
+          rescheduleHistory: [...(p.rescheduleHistory || []), event],
+          updatedAt: new Date().toISOString(),
+        };
+        if (currentUser) syncProblemToCloud(updated, currentUser.id);
+        return updated;
+      })
+    );
+
+    setRescheduleEvents((prev) => [event, ...prev]);
+    if (currentUser) syncRescheduleEventToCloud(event, currentUser.id);
+
+    recalculateDailyTargets();
+    addNotification('Task Explicitly Skipped', `Skipped "${target.title}" (Reason: ${reason}).`, 'info');
+  };
+
+  const retainTaskInQueue = (problemId: string) => {
+    const target = problems.find((p) => p.id === problemId);
+    if (!target) return;
+
+    const event: RescheduleEvent = {
+      id: `resched-${Date.now()}-${problemId}`,
+      problemId,
+      problemTitle: target.title,
+      date: todayStr,
+      action: 'retain',
+      reason: 'Retained in study queue',
+    };
+
+    setRescheduleEvents((prev) => [event, ...prev]);
+    if (currentUser) syncRescheduleEventToCloud(event, currentUser.id);
+    addNotification('Task Retained', `"${target.title}" kept visibly pending in current session.`, 'info');
+  };
+
+  const recalculateDailyTargets = () => {
+    const todayAssigned = problems.filter((p) => p.inTodayPlan);
+    const count = Math.max(1, todayAssigned.length);
+    const easy = todayAssigned.filter((p) => p.difficulty === 'Easy').length;
+    const med = todayAssigned.filter((p) => p.difficulty === 'Medium').length;
+    const hard = todayAssigned.filter((p) => p.difficulty === 'Hard').length;
+
+    updateDailyPlan({
+      targetCount: count,
+      targetEasy: easy,
+      targetMedium: med,
+      targetHard: hard,
+    });
+  };
+
+  // Feature 2: Weakness Intelligence Map Calculations
+  const topicMasteryMap = useMemo(() => computeTopicMasteryMap(problems), [problems]);
+  const weakestTopics = useMemo(() => {
+    return topicMasteryMap.filter(
+      (t) => t.status === 'Critical Weakness' || t.status === 'Needs Practice'
+    );
+  }, [topicMasteryMap]);
+
+  const recommendedRevisionProblems = useMemo(() => {
+    const weakNames = new Set(weakestTopics.map((w) => w.topic));
+    return problems
+      .filter((p) => {
+        return (
+          weakNames.has(p.topic) &&
+          (p.needsRevision ||
+            !p.solvedIndependently ||
+            (p.hintsUsed && p.hintsUsed > 0) ||
+            p.attempts > 1)
+        );
+      })
+      .slice(0, 6);
+  }, [problems, weakestTopics]);
+
+  // Feature 3: Spaced Repetition Queue
+  const spacedRepetitionQueue = useMemo(() => {
+    const revisionCandidates = problems.filter(
+      (p) => p.needsRevision || p.status === 'Needs Revision' || p.status === 'Solved with Hints'
+    );
+
+    const overdue: Problem[] = [];
+    const dueToday: Problem[] = [];
+    const upcoming: Problem[] = [];
+
+    revisionCandidates.forEach((p) => {
+      const scheduled = p.revisionScheduledDate;
+      if (!scheduled || scheduled === todayStr) {
+        dueToday.push(p);
+      } else if (scheduled < todayStr) {
+        overdue.push(p);
+      } else {
+        upcoming.push(p);
+      }
+    });
+
+    return { overdue, dueToday, upcoming };
+  }, [problems, todayStr]);
+
+  // Feature 8: Interview Readiness Meter
+  const readinessBreakdown = useMemo(() => {
+    return computeInterviewReadiness(problems, studyLogs, settings.readinessWeights);
+  }, [problems, studyLogs, settings.readinessWeights]);
+
+  // Feature 6: Weekly Performance Autopsy Getter
+  const getWeeklyAutopsyData = useCallback(
+    (offsetWeeks = 0) => {
+      return computeWeeklyAutopsy(problems, studyLogs, focusSessions, rescheduleEvents, offsetWeeks);
+    },
+    [problems, studyLogs, focusSessions, rescheduleEvents]
+  );
 
   // Settings & notifications
   const updateSettings = (updates: Partial<AccountabilitySettings>) => {
@@ -845,13 +1557,18 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
     setStlState({ ...INITIAL_STL_STATE, date: todayStr });
     setStlTopics(INITIAL_STL_TOPICS);
+    setStlExercises(INITIAL_STL_EXERCISES);
     setSettings(DEFAULT_SETTINGS);
     setStudyLogs(INITIAL_PAST_LOGS);
+    setMilestones(INITIAL_MILESTONES);
+    setFocusSessions([]);
+    setActiveFocusSession(null);
+    setRescheduleEvents([]);
     setNotifications([
       {
         id: 'sample-reset',
-        title: 'Sample Data Loaded',
-        message: 'Loaded sample questions, 7-day analytics history, and STL topics.',
+        title: 'AlgoPulse 2.0 Telemetry Initialized',
+        message: 'Loaded sample questions, 7-day analytics history, STL exercises, and milestones.',
         timestamp: new Date().toISOString(),
         type: 'info',
         read: false,
@@ -872,8 +1589,13 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       stlCompleted: false,
     });
     setStlState({ ...INITIAL_STL_STATE, date: todayStr, notes: '', codeSnippet: '' });
+    setStlExercises(INITIAL_STL_EXERCISES);
     setStudyLogs([]);
     setNotifications([]);
+    setFocusSessions([]);
+    setActiveFocusSession(null);
+    setMilestones(INITIAL_MILESTONES);
+    setRescheduleEvents([]);
   };
 
   const importAllData = (data: Record<string, unknown>): boolean => {
@@ -886,12 +1608,16 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setStlState(data.stlState as STLPracticeState);
       }
       if (Array.isArray(data.stlTopics)) setStlTopics(data.stlTopics as STLTopicItem[]);
+      if (Array.isArray(data.stlExercises)) setStlExercises(data.stlExercises as STLExercise[]);
       if (data.settings && typeof data.settings === 'object') {
         setSettings(data.settings as AccountabilitySettings);
       }
       if (Array.isArray(data.studyLogs)) setStudyLogs(data.studyLogs as StudyDayLog[]);
+      if (Array.isArray(data.focusSessions)) setFocusSessions(data.focusSessions as FocusSession[]);
+      if (Array.isArray(data.milestones)) setMilestones(data.milestones as Milestone[]);
+      if (Array.isArray(data.rescheduleEvents)) setRescheduleEvents(data.rescheduleEvents as RescheduleEvent[]);
 
-      addNotification('Import Successful', 'All backup data successfully imported.', 'success');
+      addNotification('Import Successful', 'All backup telemetry successfully imported.', 'success');
       return true;
     } catch (e) {
       console.error(e);
@@ -968,9 +1694,37 @@ export const DSAProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateSTLState,
         toggleSTLTopicComplete,
         markSTLComplete,
+        stlExercises,
+        toggleSTLExerciseComplete,
+        updateSTLExerciseCode,
         scheduleRevision,
         logRevisionAttempt,
+        logSpacedRepetitionOutcome,
         removeRevision,
+        spacedRepetitionQueue,
+        focusSessions,
+        activeFocusSession,
+        startFocusSession,
+        pauseFocusSession,
+        resumeFocusSession,
+        recordFocusHint,
+        recordFocusMistake,
+        finishFocusSession,
+        cancelFocusSession,
+        rescheduleEvents,
+        incompleteTasks,
+        carryOverTasksToToday,
+        rescheduleTaskDate,
+        skipTaskWithReason,
+        retainTaskInQueue,
+        recalculateDailyTargets,
+        topicMasteryMap,
+        weakestTopics,
+        recommendedRevisionProblems,
+        readinessBreakdown,
+        getWeeklyAutopsyData,
+        milestones,
+        checkMilestoneProgress,
         updateSettings,
         addNotification,
         markNotificationRead,

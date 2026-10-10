@@ -9,6 +9,10 @@ import { STLPracticeView } from './components/views/STLPracticeView';
 import { RevisionQueueView } from './components/views/RevisionQueueView';
 import { AnalyticsView } from './components/views/AnalyticsView';
 import { SettingsView } from './components/views/SettingsView';
+import { WeaknessMapView } from './components/views/WeaknessMapView';
+import { FocusModeView } from './components/views/FocusModeView';
+import { WeeklyAutopsyView } from './components/views/WeeklyAutopsyView';
+import { MilestonesView } from './components/views/MilestonesView';
 import { AddEditProblemModal } from './components/modals/AddEditProblemModal';
 import { BulkAddModal } from './components/modals/BulkAddModal';
 import { RevisionLogModal } from './components/modals/RevisionLogModal';
@@ -62,6 +66,14 @@ const MainApp: React.FC = () => {
             onEditProblem={handleOpenEditModal}
           />
         );
+      case 'focus-mode':
+        return <FocusModeView />;
+      case 'weakness-map':
+        return (
+          <WeaknessMapView
+            onOpenRevisionModal={handleOpenRevisionModal}
+          />
+        );
       case 'question-bank':
         return (
           <QuestionBankView
@@ -79,6 +91,10 @@ const MainApp: React.FC = () => {
             onOpenRevisionModal={handleOpenRevisionModal}
           />
         );
+      case 'weekly-autopsy':
+        return <WeeklyAutopsyView />;
+      case 'milestones':
+        return <MilestonesView />;
       case 'analytics':
         return <AnalyticsView />;
       case 'settings':

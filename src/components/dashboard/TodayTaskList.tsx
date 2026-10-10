@@ -29,7 +29,7 @@ export const TodayTaskList: React.FC<TodayTaskListProps> = ({
   onOpenAddModal,
   onOpenRevisionModal,
 }) => {
-  const { problems, toggleProblemStatus, reorderTodayPlan, deleteProblem } = useDSA();
+  const { problems, toggleProblemStatus, reorderTodayPlan, deleteProblem, startFocusSession } = useDSA();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty | 'All'>('All');
@@ -256,6 +256,15 @@ export const TodayTaskList: React.FC<TodayTaskListProps> = ({
 
                   {/* Fast Action Buttons */}
                   <div className="flex items-center space-x-1">
+                    {/* Launch Focus Mode */}
+                    <button
+                      onClick={() => startFocusSession(problem)}
+                      title="Enter Focus Mode"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all"
+                    >
+                      <Clock size={16} />
+                    </button>
+
                     {/* Mark Solved Solo */}
                     <button
                       onClick={() => handleMarkStatus(problem, 'Solved Independently')}

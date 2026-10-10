@@ -49,6 +49,13 @@ export const mapProblemToRow = (problem: Problem, userId: string) => ({
   revision_scheduled_date: problem.revisionScheduledDate || null,
   mistakes: problem.mistakes || null,
   pattern_learned: problem.patternLearned || null,
+  hints_used: problem.hintsUsed || 0,
+  hints_notes: problem.hintsNotes || null,
+  focus_time_seconds: problem.focusTimeSeconds || 0,
+  spaced_repetition_stage: problem.spacedRepetitionStage || 0,
+  last_revision_outcome: problem.lastRevisionOutcome || null,
+  last_revision_date: problem.lastRevisionDate || null,
+  reschedule_history: problem.rescheduleHistory || [],
   revision_history: problem.revisionHistory || [],
   updated_at: new Date().toISOString(),
 });
@@ -77,6 +84,13 @@ export const mapRowToProblem = (row: any): Problem => ({
   revisionScheduledDate: row.revision_scheduled_date || undefined,
   mistakes: row.mistakes || undefined,
   patternLearned: row.pattern_learned || undefined,
+  hintsUsed: row.hints_used || 0,
+  hintsNotes: row.hints_notes || '',
+  focusTimeSeconds: row.focus_time_seconds || 0,
+  spacedRepetitionStage: row.spaced_repetition_stage || 0,
+  lastRevisionOutcome: row.last_revision_outcome || undefined,
+  lastRevisionDate: row.last_revision_date || undefined,
+  rescheduleHistory: row.reschedule_history || [],
   revisionHistory: row.revision_history || [],
   createdAt: row.created_at || new Date().toISOString(),
   updatedAt: row.updated_at || new Date().toISOString(),
@@ -146,6 +160,8 @@ export const mapSettingsToRow = (settings: AccountabilitySettings, userId: strin
   daily_target_easy: settings.dailyTargetEasy,
   daily_target_medium: settings.dailyTargetMedium,
   daily_target_hard: settings.dailyTargetHard,
+  spaced_repetition_intervals: settings.spacedRepetitionIntervals || [1, 3, 7, 14],
+  readiness_weights: settings.readinessWeights || { coverage: 25, independent: 25, revision: 20, difficulty: 15, consistency: 15 },
   updated_at: new Date().toISOString(),
 });
 
@@ -161,6 +177,8 @@ export const mapRowToSettings = (row: any): AccountabilitySettings => ({
   dailyTargetEasy: row.daily_target_easy || 2,
   dailyTargetMedium: row.daily_target_medium || 2,
   dailyTargetHard: row.daily_target_hard || 1,
+  spacedRepetitionIntervals: row.spaced_repetition_intervals || [1, 3, 7, 14],
+  readinessWeights: row.readiness_weights || { coverage: 25, independent: 25, revision: 20, difficulty: 15, consistency: 15 },
 });
 
 export const mapStudyLogToRow = (log: StudyDayLog, userId: string) => ({
@@ -194,6 +212,63 @@ export const mapRowToStudyLog = (row: any): StudyDayLog => ({
   targetMet: row.target_met || false,
 });
 
+// Focus Sessions Mappers
+export const mapFocusSessionToRow = (session: any, userId: string) => ({
+  id: session.id,
+  user_id: userId,
+  problem_id: session.problemId || null,
+  problem_title: session.problemTitle,
+  started_at: session.startedAt,
+  ended_at: session.endedAt || null,
+  active_seconds: session.activeSeconds || 0,
+  break_seconds: session.breakSeconds || 0,
+  hints_used: session.hintsUsed || 0,
+  hint_notes: session.hintNotes || null,
+  mistakes_recorded: session.mistakesRecorded || null,
+  status: session.status || 'completed',
+});
+
+export const mapRowToFocusSession = (row: any) => ({
+  id: row.id,
+  problemId: row.problem_id || '',
+  problemTitle: row.problem_title || '',
+  startedAt: row.started_at,
+  endedAt: row.ended_at || undefined,
+  activeSeconds: row.active_seconds || 0,
+  breakSeconds: row.break_seconds || 0,
+  hintsUsed: row.hints_used || 0,
+  hintNotes: row.hint_notes || '',
+  mistakesRecorded: row.mistakes_recorded || '',
+  status: row.status || 'completed',
+});
+
+// STL Exercises Mappers
+export const mapSTLExerciseToRow = (ex: any, userId: string) => ({
+  id: `${userId}_${ex.id}`,
+  user_id: userId,
+  exercise_id: ex.id,
+  topic_id: ex.topicId,
+  is_completed: ex.isCompleted || false,
+  completed_at: ex.completedAt || null,
+  user_code: ex.userCode || null,
+  notes: ex.notes || null,
+  updated_at: new Date().toISOString(),
+});
+
+// Milestones Mappers
+export const mapMilestoneToRow = (m: any, userId: string) => ({
+  id: `${userId}_${m.id}`,
+  user_id: userId,
+  milestone_id: m.id,
+  title: m.title,
+  category: m.category,
+  target_value: m.targetValue,
+  current_value: m.currentValue || 0,
+  is_unlocked: m.isUnlocked || false,
+  unlocked_at: m.unlockedAt || null,
+  updated_at: new Date().toISOString(),
+});
+
 // ==============================================================================
 // Cloud Database CRUD Services
 // ==============================================================================
@@ -202,12 +277,16 @@ export const fetchAllUserDataFromCloud = async (userId: string) => {
   if (!supabase) return null;
 
   try {
-    const [problemsRes, plansRes, stlRes, settingsRes, logsRes] = await Promise.all([
+    const [problemsRes, plansRes, stlRes, settingsRes, logsRes, focusRes, stlExRes, milestonesRes, reschedRes] = await Promise.all([
       supabase.from('dsa_problems').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
       supabase.from('daily_plans').select('*').eq('user_id', userId),
       supabase.from('stl_practice_sessions').select('*').eq('user_id', userId),
       supabase.from('user_settings').select('*').eq('user_id', userId).single(),
       supabase.from('study_logs').select('*').eq('user_id', userId).order('date', { ascending: false }),
+      supabase.from('focus_sessions').select('*').eq('user_id', userId).order('started_at', { ascending: false }).limit(50),
+      supabase.from('stl_exercises').select('*').eq('user_id', userId),
+      supabase.from('milestones').select('*').eq('user_id', userId),
+      supabase.from('reschedule_events').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(50),
     ]);
 
     return {
@@ -216,6 +295,10 @@ export const fetchAllUserDataFromCloud = async (userId: string) => {
       stlSessions: (stlRes.data || []).map(mapRowToSTLSession),
       settings: settingsRes.data ? mapRowToSettings(settingsRes.data) : null,
       studyLogs: (logsRes.data || []).map(mapRowToStudyLog),
+      focusSessions: (focusRes.data || []).map(mapRowToFocusSession),
+      stlExercises: stlExRes.data || [],
+      milestones: milestonesRes.data || [],
+      rescheduleEvents: reschedRes.data || [],
     };
   } catch (error) {
     console.error('Error fetching data from Supabase:', error);
@@ -281,3 +364,53 @@ export const syncStudyLogToCloud = async (log: StudyDayLog, userId: string) => {
     console.error('Failed to sync study log to Supabase', err);
   }
 };
+
+export const syncFocusSessionToCloud = async (session: any, userId: string) => {
+  if (!supabase) return;
+  try {
+    const row = mapFocusSessionToRow(session, userId);
+    await supabase.from('focus_sessions').upsert(row);
+  } catch (err) {
+    console.error('Failed to sync focus session to Supabase', err);
+  }
+};
+
+export const syncSTLExerciseToCloud = async (exercise: any, userId: string) => {
+  if (!supabase) return;
+  try {
+    const row = mapSTLExerciseToRow(exercise, userId);
+    await supabase.from('stl_exercises').upsert(row);
+  } catch (err) {
+    console.error('Failed to sync STL exercise to Supabase', err);
+  }
+};
+
+export const syncMilestoneToCloud = async (milestone: any, userId: string) => {
+  if (!supabase) return;
+  try {
+    const row = mapMilestoneToRow(milestone, userId);
+    await supabase.from('milestones').upsert(row);
+  } catch (err) {
+    console.error('Failed to sync milestone to Supabase', err);
+  }
+};
+
+export const syncRescheduleEventToCloud = async (event: any, userId: string) => {
+  if (!supabase) return;
+  try {
+    await supabase.from('reschedule_events').upsert({
+      id: event.id,
+      user_id: userId,
+      problem_id: event.problemId || null,
+      problem_title: event.problemTitle,
+      date: event.date,
+      action: event.action,
+      previous_date: event.previousDate || null,
+      target_date: event.targetDate || null,
+      reason: event.reason || null,
+    });
+  } catch (err) {
+    console.error('Failed to sync reschedule event to Supabase', err);
+  }
+};
+

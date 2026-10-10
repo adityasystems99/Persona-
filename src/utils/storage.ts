@@ -6,6 +6,10 @@ import {
   StudyDayLog,
   AppNotification,
   STLTopicItem,
+  STLExercise,
+  FocusSession,
+  Milestone,
+  RescheduleEvent,
 } from '../types/dsa';
 import {
   INITIAL_PROBLEMS,
@@ -15,6 +19,8 @@ import {
   getTodayDateString,
 } from '../data/initialData';
 import { INITIAL_STL_TOPICS } from '../data/stlTopics';
+import { INITIAL_STL_EXERCISES } from '../data/stlExercises';
+import { INITIAL_MILESTONES } from '../data/milestonesData';
 
 const STORAGE_KEYS = {
   PROBLEMS: 'algopulse_problems_v1',
@@ -25,6 +31,11 @@ const STORAGE_KEYS = {
   STUDY_LOGS: 'algopulse_study_logs_v1',
   NOTIFICATIONS: 'algopulse_notifications_v1',
   LAST_REMINDER: 'algopulse_last_reminder_v1',
+  STL_EXERCISES: 'algopulse_stl_exercises_v2',
+  FOCUS_SESSIONS: 'algopulse_focus_sessions_v2',
+  ACTIVE_FOCUS: 'algopulse_active_focus_state_v2',
+  MILESTONES: 'algopulse_milestones_v2',
+  RESCHEDULE_EVENTS: 'algopulse_reschedule_events_v2',
 };
 
 export const loadStoredProblems = (): Problem[] => {
@@ -208,6 +219,117 @@ export const setLastHourlyReminderTimestamp = (ts: number): void => {
   } catch {}
 };
 
+// --- STL Exercises Storage ---
+export const loadStoredSTLExercises = (): STLExercise[] => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.STL_EXERCISES);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {
+    console.error('Error loading STL exercises', e);
+  }
+  return INITIAL_STL_EXERCISES;
+};
+
+export const saveStoredSTLExercises = (exercises: STLExercise[]): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.STL_EXERCISES, JSON.stringify(exercises));
+  } catch (e) {
+    console.error('Error saving STL exercises', e);
+  }
+};
+
+// --- Focus Sessions Storage ---
+export const loadStoredFocusSessions = (): FocusSession[] => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.FOCUS_SESSIONS);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {
+    console.error('Error loading focus sessions', e);
+  }
+  return [];
+};
+
+export const saveStoredFocusSessions = (sessions: FocusSession[]): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.FOCUS_SESSIONS, JSON.stringify(sessions));
+  } catch (e) {
+    console.error('Error saving focus sessions', e);
+  }
+};
+
+export interface ActiveFocusState {
+  problemId: string;
+  problemTitle: string;
+  sessionStartTime: number; // Date.now() timestamp
+  accumulatedFocusSeconds: number;
+  accumulatedBreakSeconds: number;
+  lastStateTimestamp: number;
+  status: 'running' | 'paused';
+  hintsUsed: number;
+  hintNotes: string;
+  mistakesRecorded: string;
+}
+
+export const loadStoredActiveFocus = (): ActiveFocusState | null => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.ACTIVE_FOCUS);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {
+    console.error('Error loading active focus session', e);
+  }
+  return null;
+};
+
+export const saveStoredActiveFocus = (state: ActiveFocusState | null): void => {
+  try {
+    if (state === null) {
+      localStorage.removeItem(STORAGE_KEYS.ACTIVE_FOCUS);
+    } else {
+      localStorage.setItem(STORAGE_KEYS.ACTIVE_FOCUS, JSON.stringify(state));
+    }
+  } catch (e) {
+    console.error('Error saving active focus state', e);
+  }
+};
+
+// --- Milestones Storage ---
+export const loadStoredMilestones = (): Milestone[] => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.MILESTONES);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {
+    console.error('Error loading milestones', e);
+  }
+  return INITIAL_MILESTONES;
+};
+
+export const saveStoredMilestones = (milestones: Milestone[]): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.MILESTONES, JSON.stringify(milestones));
+  } catch (e) {
+    console.error('Error saving milestones', e);
+  }
+};
+
+// --- Reschedule Events Storage ---
+export const loadStoredRescheduleEvents = (): RescheduleEvent[] => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.RESCHEDULE_EVENTS);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {
+    console.error('Error loading reschedule events', e);
+  }
+  return [];
+};
+
+export const saveStoredRescheduleEvents = (events: RescheduleEvent[]): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.RESCHEDULE_EVENTS, JSON.stringify(events));
+  } catch (e) {
+    console.error('Error saving reschedule events', e);
+  }
+};
+
 export const clearAllAlgoPulseData = (): void => {
   try {
     Object.values(STORAGE_KEYS).forEach((key) => localStorage.removeItem(key));
@@ -215,3 +337,4 @@ export const clearAllAlgoPulseData = (): void => {
     console.error('Error clearing data', e);
   }
 };
+
