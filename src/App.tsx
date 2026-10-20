@@ -16,6 +16,8 @@ import { WeeklyAutopsyView } from './components/views/WeeklyAutopsyView';
 import { MilestonesView } from './components/views/MilestonesView';
 import { PlaylistTrackerView } from './components/views/PlaylistTrackerView';
 import { AcademicTrackerContainer } from './components/academic/AcademicTrackerContainer';
+import { PlacementPrepContainer } from './components/placement/PlacementPrepContainer';
+import { PlacementProvider } from './context/PlacementContext';
 import { AddEditProblemModal } from './components/modals/AddEditProblemModal';
 import { BulkAddModal } from './components/modals/BulkAddModal';
 import { RevisionLogModal } from './components/modals/RevisionLogModal';
@@ -29,15 +31,19 @@ const MainApp: React.FC = () => {
   const { activeTab, setActiveTab, authModalOpen, setAuthModalOpen } = useDSA();
   const { theme, lampModalOpen, setLampModalOpen } = useTheme();
 
-  // Direct URL Navigation Support for /academic-tracker
+  // Direct URL Navigation Support for /academic-tracker and /placement-prep
   useEffect(() => {
     if (window.location.pathname.startsWith('/academic-tracker')) {
       setActiveTab('academic-tracker');
+    } else if (window.location.pathname.startsWith('/placement-prep')) {
+      setActiveTab('placement-prep');
     }
 
     const handlePop = () => {
       if (window.location.pathname.startsWith('/academic-tracker')) {
         setActiveTab('academic-tracker');
+      } else if (window.location.pathname.startsWith('/placement-prep')) {
+        setActiveTab('placement-prep');
       }
     };
     window.addEventListener('popstate', handlePop);
@@ -72,9 +78,12 @@ const MainApp: React.FC = () => {
 
   const renderActiveView = () => {
     switch (activeTab) {
+      case 'placement-prep':
+        return <PlacementPrepContainer />;
       case 'academic-tracker':
         return <AcademicTrackerContainer />;
       case 'dashboard':
+
         return (
           <DashboardView
             onEditProblem={handleOpenEditModal}
@@ -229,12 +238,15 @@ export function App() {
   return (
     <ThemeProvider>
       <DSAProvider>
-        <AcademicProvider>
-          <MainApp />
-        </AcademicProvider>
+        <PlacementProvider>
+          <AcademicProvider>
+            <MainApp />
+          </AcademicProvider>
+        </PlacementProvider>
       </DSAProvider>
     </ThemeProvider>
   );
 }
+
 
 export default App;

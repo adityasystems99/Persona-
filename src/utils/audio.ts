@@ -93,6 +93,52 @@ class SoundManager {
       osc.stop(ctx.currentTime + 0.05);
     } catch {}
   }
+
+  // Double-tone melodic reminder ping for placement sessions
+  playReminderChime(): void {
+    try {
+      const ctx = this.getContext();
+      if (!ctx) return;
+
+      const now = ctx.currentTime;
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc1.type = 'sine';
+      osc2.type = 'sine';
+
+      // First tone (E5 ~ 659.25 Hz)
+      osc1.frequency.setValueAtTime(659.25, now);
+      // Second harmonic chime tone (B5 ~ 987.77 Hz)
+      osc2.frequency.setValueAtTime(987.77, now + 0.12);
+
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.2, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
+
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc1.start(now);
+      osc1.stop(now + 0.25);
+
+      osc2.start(now + 0.12);
+      osc2.stop(now + 0.75);
+    } catch {}
+  }
+
+  // Trigger device vibration if supported by mobile/tablet browsers
+  triggerVibration(pattern: number | number[] = [150, 75, 150]): boolean {
+    try {
+      if (typeof window !== 'undefined' && 'navigator' in window && 'vibrate' in navigator) {
+        return navigator.vibrate(pattern);
+      }
+    } catch {}
+    return false;
+  }
 }
 
 export const soundFx = new SoundManager();
+

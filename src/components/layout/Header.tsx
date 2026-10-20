@@ -9,8 +9,10 @@ import {
   Cloud,
   HardDrive,
   Lamp,
+  Briefcase,
 } from 'lucide-react';
 import { useDSA } from '../../context/DSAContext';
+import { usePlacement } from '../../context/PlacementContext';
 import { useTheme } from '../../context/ThemeContext';
 import { NotificationDropdown } from '../common/NotificationToast';
 
@@ -25,9 +27,11 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAddModal,
   onOpenSummaryModal,
 }) => {
-  const { dailyPlan, notifications, currentUser, setAuthModalOpen } = useDSA();
+  const { dailyPlan, notifications, currentUser, setAuthModalOpen, setActiveTab } = useDSA();
+  const { todayApplicationsCount, todayApplicationsTarget, sprintDayNumber } = usePlacement();
   const { theme, setLampModalOpen } = useTheme();
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
+
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -107,9 +111,25 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </button>
 
+          {/* Placement Prep Sprint Quick Badge */}
+          <button
+            onClick={() => {
+              setActiveTab('placement-prep');
+              if (!window.location.pathname.startsWith('/placement-prep')) {
+                window.history.pushState(null, '', '/placement-prep');
+              }
+            }}
+            className="hidden lg:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-violet-950/60 border border-violet-500/30 text-violet-300 hover:bg-violet-900/40 hover:text-white transition-all shadow-sm"
+            title="Go to 3-Month Placement Sprint"
+          >
+            <Briefcase size={13} className="text-violet-400" />
+            <span>Placement: {todayApplicationsCount}/{todayApplicationsTarget} Apps</span>
+          </button>
+
           {/* Quick End-of-Session Summary */}
           <button
             onClick={onOpenSummaryModal}
+
             className="hidden sm:flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-200 bg-[#12142e]/80 border border-violet-500/20 hover:bg-[#1a1c40] hover:border-violet-400/40 shadow-sm active:scale-95 transition-all"
             title="View today's mission completion summary"
           >

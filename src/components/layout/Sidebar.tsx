@@ -1,6 +1,7 @@
 import {
   LayoutDashboard,
   GraduationCap,
+  Briefcase,
   CalendarCheck2,
   Database,
   Timer,
@@ -42,6 +43,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'dashboard',
       label: 'Dashboard',
       icon: <LayoutDashboard size={20} />,
+    },
+    {
+      id: 'placement-prep',
+      label: 'Placement Prep',
+      icon: <Briefcase size={20} />,
+      badge: '90 Days',
     },
     {
       id: 'academic-tracker',
@@ -120,13 +127,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
       if (!window.location.pathname.startsWith('/academic-tracker')) {
         window.history.pushState(null, '', '/academic-tracker');
       }
+    } else if (tab === 'placement-prep') {
+      if (!window.location.pathname.startsWith('/placement-prep')) {
+        window.history.pushState(null, '', '/placement-prep');
+      }
     } else {
-      if (window.location.pathname.startsWith('/academic-tracker')) {
+      if (
+        window.location.pathname.startsWith('/academic-tracker') ||
+        window.location.pathname.startsWith('/placement-prep')
+      ) {
         window.history.pushState(null, '', '/');
       }
     }
     onCloseMobile();
   };
+
 
   const sidebarContent = (
     <div className="h-full flex flex-col justify-between p-4 text-slate-300">

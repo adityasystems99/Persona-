@@ -349,6 +349,7 @@ export interface Playlist {
 
 export type ActiveTab = 
   | 'dashboard'
+  | 'placement-prep'
   | 'academic-tracker'
   | 'daily-plan'
   | 'question-bank'
@@ -361,4 +362,5 @@ export type ActiveTab =
   | 'playlists'
   | 'analytics'
   | 'settings';
+
 
