@@ -8,8 +8,10 @@ import {
   Sparkles,
   Cloud,
   HardDrive,
+  Lamp,
 } from 'lucide-react';
 import { useDSA } from '../../context/DSAContext';
+import { useTheme } from '../../context/ThemeContext';
 import { NotificationDropdown } from '../common/NotificationToast';
 
 interface HeaderProps {
@@ -24,6 +26,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSummaryModal,
 }) => {
   const { dailyPlan, notifications, currentUser, setAuthModalOpen } = useDSA();
+  const { theme, setLampModalOpen } = useTheme();
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -112,6 +115,23 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <CheckCircle2 size={15} className="text-violet-400" />
             <span>Mission Brief</span>
+          </button>
+
+          {/* Vintage Banker's Pull Lamp Theme Switcher Trigger */}
+          <button
+            onClick={() => setLampModalOpen(true)}
+            className={`flex items-center space-x-1.5 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold transition-all border shadow-sm ${
+              theme === 'light'
+                ? 'bg-amber-500/20 text-amber-300 border-amber-400/40 hover:bg-amber-500/30 shadow-[0_0_15px_rgba(251,191,36,0.3)]'
+                : 'bg-[#12142e]/80 text-slate-300 border-violet-500/20 hover:bg-[#1a1c40] hover:text-white'
+            }`}
+            title="Interactive Banker's Lamp Theme Switcher"
+            aria-label="Open Vintage Banker's Lamp Theme Switcher"
+          >
+            <Lamp size={16} className={theme === 'light' ? 'text-amber-300 animate-pulse' : 'text-violet-400'} />
+            <span className="hidden md:inline">
+              {theme === 'light' ? 'Day Light' : 'Desk Lamp'}
+            </span>
           </button>
 
           {/* Notification Bell */}

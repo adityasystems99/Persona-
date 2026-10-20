@@ -22,9 +22,12 @@ import { RevisionLogModal } from './components/modals/RevisionLogModal';
 import { EndOfDaySummaryModal } from './components/dashboard/EndOfDaySummaryModal';
 import { AuthModal } from './components/modals/AuthModal';
 import { Problem } from './types/dsa';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { LampThemeModal } from './components/modals/LampThemeModal';
 
 const MainApp: React.FC = () => {
   const { activeTab, setActiveTab, authModalOpen, setAuthModalOpen } = useDSA();
+  const { theme, lampModalOpen, setLampModalOpen } = useTheme();
 
   // Direct URL Navigation Support for /academic-tracker
   useEffect(() => {
@@ -133,12 +136,30 @@ const MainApp: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#070814] text-slate-100 flex flex-col font-sans relative overflow-x-hidden">
+    <div
+      className={`min-h-screen ${
+        theme === 'light'
+          ? 'bg-[#f5ede2] text-slate-800'
+          : 'bg-[#070814] text-slate-100'
+      } flex flex-col font-sans relative overflow-x-hidden transition-colors duration-500`}
+    >
       {/* Cosmic Space Nebula Ambient Glows */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute -top-32 -left-32 w-96 h-96 bg-violet-600/12 rounded-full blur-3xl" />
-        <div className="absolute top-1/4 -right-32 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-10 left-1/3 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl" />
+        <div
+          className={`absolute -top-32 -left-32 w-96 h-96 ${
+            theme === 'light' ? 'bg-amber-500/15' : 'bg-violet-600/12'
+          } rounded-full blur-3xl transition-colors duration-700`}
+        />
+        <div
+          className={`absolute top-1/4 -right-32 w-96 h-96 ${
+            theme === 'light' ? 'bg-emerald-600/10' : 'bg-indigo-600/10'
+          } rounded-full blur-3xl transition-colors duration-700`}
+        />
+        <div
+          className={`absolute bottom-10 left-1/3 w-96 h-96 ${
+            theme === 'light' ? 'bg-yellow-500/10' : 'bg-purple-600/10'
+          } rounded-full blur-3xl transition-colors duration-700`}
+        />
       </div>
 
       {/* Sidebar Navigation */}
@@ -195,17 +216,24 @@ const MainApp: React.FC = () => {
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
       />
+
+      <LampThemeModal
+        isOpen={lampModalOpen}
+        onClose={() => setLampModalOpen(false)}
+      />
     </div>
   );
 };
 
 export function App() {
   return (
-    <DSAProvider>
-      <AcademicProvider>
-        <MainApp />
-      </AcademicProvider>
-    </DSAProvider>
+    <ThemeProvider>
+      <DSAProvider>
+        <AcademicProvider>
+          <MainApp />
+        </AcademicProvider>
+      </DSAProvider>
+    </ThemeProvider>
   );
 }
 

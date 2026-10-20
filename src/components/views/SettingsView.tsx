@@ -16,8 +16,13 @@ import {
   Cloud,
   UserCheck,
   Database,
+  Lamp,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { useDSA } from '../../context/DSAContext';
+import { useTheme } from '../../context/ThemeContext';
+import { PullLamp } from '../common/PullLamp';
 import {
   checkNotificationPermission,
   requestNotificationPermission,
@@ -45,6 +50,7 @@ export const SettingsView: React.FC = () => {
     currentUser,
     setAuthModalOpen,
   } = useDSA();
+  const { theme, setTheme } = useTheme();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [permission, setPermission] = useState<NotificationPermission>(
@@ -111,6 +117,70 @@ export const SettingsView: React.FC = () => {
         <p className="text-xs text-slate-400 mt-1">
           Configure flight windows, telemetry check-in intervals, cloud replication, audio signals, and orbital backups.
         </p>
+      </div>
+
+      {/* Interactive Vintage Banker's Pull-Cord Lamp Section */}
+      <div className="card-soft p-6 space-y-4 bg-[#0c0e22]/90 border border-violet-500/20">
+        <div className="flex items-center justify-between pb-3 border-b border-violet-500/10">
+          <div className="flex items-center space-x-2.5">
+            <Lamp size={18} className="text-amber-400" />
+            <div>
+              <h3 className="font-bold text-sm text-white">
+                Interactive Banker&apos;s Desk Lamp &bull; Theme Switcher
+              </h3>
+              <p className="text-[11px] text-slate-400">
+                Pull the brass cord down or click to switch between Dark Cosmic Orbit and Warm Daylight
+              </p>
+            </div>
+          </div>
+          <span
+            className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full border transition-all ${
+              theme === 'light'
+                ? 'bg-amber-500/15 text-amber-300 border-amber-400/30'
+                : 'bg-violet-950/70 text-violet-300 border-violet-500/30'
+            }`}
+          >
+            {theme === 'light' ? <Sun size={13} /> : <Moon size={13} />}
+            <span>{theme === 'light' ? 'Daylight Active' : 'Dark Mode Active'}</span>
+          </span>
+        </div>
+
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 p-4 rounded-2xl bg-[#080916] border border-violet-500/20">
+          <div className="w-full max-w-[260px] mx-auto">
+            <PullLamp
+              theme={theme}
+              onThemeChange={(newTheme) => setTheme(newTheme)}
+              width="100%"
+              soundEnabled={true}
+            />
+          </div>
+
+          <div className="flex-1 space-y-3 text-xs text-slate-300">
+            <div className="p-3 rounded-xl bg-violet-950/40 border border-violet-500/20">
+              <span className="font-bold text-white block mb-1">🎮 Physics &amp; Gesture Simulation</span>
+              <p className="text-slate-400 text-[11px] leading-relaxed">
+                Features real-time 2nd-order differential spring physics with vertical damping ($k=220, d=19$) and lateral pendulum sway. A quadratic B&eacute;zier curve recalculates both the brass cord line and beaded chain positions as you pull.
+              </p>
+            </div>
+
+            <div className="p-3 rounded-xl bg-violet-950/40 border border-violet-500/20">
+              <span className="font-bold text-white block mb-1">♿ Full Accessibility &amp; Sound</span>
+              <p className="text-slate-400 text-[11px] leading-relaxed">
+                Includes an accessible hidden button target with dynamic <code>aria-pressed</code> and <code>aria-label</code>. Keyboard users can focus via <kbd className="px-1.5 py-0.5 rounded bg-violet-900/60 text-white font-mono text-[10px]">Tab</kbd> and toggle via <kbd className="px-1.5 py-0.5 rounded bg-violet-900/60 text-white font-mono text-[10px]">Space</kbd> / <kbd className="px-1.5 py-0.5 rounded bg-violet-900/60 text-white font-mono text-[10px]">Enter</kbd>.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-violet-900/40 hover:bg-violet-900/60 text-violet-200 border border-violet-500/30 transition-all"
+              >
+                Switch to {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Cloud Sync & Persistence Section */}
